@@ -27,7 +27,7 @@ parser.add_argument('--num_classes', type=int, default=200, help='number of cate
 parser.add_argument('--optimizer', type=str, default='sgd', help='valid optimizers are sgd and adam, adam is recommended for vit')
 parser.add_argument('--learning_rate', type=float, default=1e-4, help='learning rate')
 parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight decay for sgd')
-parser.add_argument('--num_epochs', type=int, default=12, help='number of training epochs')
+parser.add_argument('--num_epochs', type=int, default=5, help='number of training epochs')
 parser.add_argument('--run_name', type=str, default='auto', help='whether to use auto-generated (auto) or user-defined run name')
 parser.add_argument('--save_model', type=my_bool, default=False, help='whether to save the trained model')
 parser.add_argument('--save_txt', type=my_bool, default=False, help='whether to save the final accuracy and wall time into txt')

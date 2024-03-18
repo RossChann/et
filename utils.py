@@ -229,14 +229,20 @@ def port_datasets(
                                 .prefetch(buffer_size=tf.data.AUTOTUNE)
     
     elif dataset_name == 'oxford_iiit_pet':
-       ds = tfds.load('oxford_iiit_pet', as_supervised=True) # 37 classes
-       ds_train = ds['train'].map(prep, num_parallel_calls=tf.data.AUTOTUNE)\
-                                .batch(batch_size)\
-                                .prefetch(buffer_size=tf.data.AUTOTUNE)
-                                
-       ds_test = ds['test'].map(prep, num_parallel_calls=tf.data.AUTOTUNE)\
-                              .batch(batch_size*2)\
-                              .prefetch(buffer_size=tf.data.AUTOTUNE)
+        # 划分训练数据集为三个相等的部分
+        split0, split1, split2 = tfds.even_splits('train', n=3)
+        # 加载 1/3 的训练数据
+        ds_train = tfds.load('oxford_iiit_pet', split=split0, as_supervised=True)
+        # 应用数据预处理、批处理和预取
+        ds_train = ds_train.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+            .batch(batch_size) \
+            .prefetch(buffer_size=tf.data.AUTOTUNE)
+        # 加载完整的测试数据集
+        ds_test = tfds.load('oxford_iiit_pet', split='test', as_supervised=True)
+        # 应用数据预处理、批处理和预取
+        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+            .batch(batch_size * 2) \
+            .prefetch(buffer_size=tf.data.AUTOTUNE)
     else:
         raise NotImplementedError("This dataset has not been implemented yet")
                               
