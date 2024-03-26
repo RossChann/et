@@ -1052,3 +1052,61 @@ def prune_training(
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
     # sig_stop_handler(None, None)
+
+
+def federated_training(model_fn, client_datasets, ds_test, run_name, logdir, lr=1e-4, weight_decay=5e-4,
+                       global_epochs=4, client_epochs=5):
+    # 初始化全局模型
+    global_model = model_fn()
+
+    # 定义优化器
+    optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+
+    # 定义损失函数和精度度量
+    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    accuracy_metric = tf.metrics.SparseCategoricalAccuracy()
+
+    # 准备日志写入器
+    runid = run_name + '_federated'
+    writer = tf.summary.create_file_writer(logdir + '/' + runid)
+
+    for global_epoch in range(global_epochs):
+        print(f"Global Epoch {global_epoch + 1}/{global_epochs}")
+
+        # 收集所有客户端的权重更新
+        weight_updates = []
+        client_weights = []
+
+        for client_id, ds_train in enumerate(client_datasets):
+            # 克隆全局模型为客户端模型
+            client_model = model_fn()
+            client_model.set_weights(global_model.get_weights())
+
+            # 客户端训练
+            client_model.compile(optimizer=optimizer, loss=loss_fn, metrics=[accuracy_metric])
+
+            print(f"Training on client {client_id + 1}/{len(client_datasets)}")
+            client_model.fit(ds_train, epochs=client_epochs, verbose=1)
+
+            # 收集客户端模型的权重
+            client_weights.append(client_model.get_weights())
+
+        # 使用FedAvg算法更新全局模型的权重
+        new_weights = np.mean(client_weights, axis=0)
+        global_model.set_weights(new_weights)
+
+        # 在全局测试集上评估全局模型
+        global_model.compile(optimizer=optimizer, loss=loss_fn, metrics=[accuracy_metric])
+        test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
+        print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
+
+        # 记录全局模型的精度和损失
+        with writer.as_default():
+            tf.summary.scalar('test/global_accuracy', test_accuracy, step=global_epoch)
+            tf.summary.scalar('test/global_loss', test_loss, step=global_epoch)
+
+    # 打印全局模型的最终精度
+    print('================================================')
+    print('Federated Training Complete')
+    print(f"Final Global Model Accuracy: {test_accuracy * 100:.2f}%")
+    print('================================================')

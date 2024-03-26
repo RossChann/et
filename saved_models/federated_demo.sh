@@ -1,0 +1,1 @@
+python3 main_fl.py --model_name resnet50 --dataset_name oxford_iiit_pet --train_type federated_training
