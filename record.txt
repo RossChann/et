@@ -3,6 +3,18 @@ full_training:epoch=5,round=4,client=3
 global_test_accuracy:
 89.33% in full_training
 86.63% in elastic_trainer
-
+相对来说有些局部模型收敛速度略快，全局模型的过拟合情况更容易出现
 Time:
 save 63.48%
+
+
+selection_DP.py的改进：
+MINIMAL_IMPORTANCE初始化可能会导致选择不选择任何层成为了最优解
+
+
+
+
+client_selection策略:
+Shapley Value的贪婪客户端选择策略，通过选取每轮通信中最有贡献的客户端来减少通信轮次，加快模型收敛-
+主要使用快速的蒙特卡罗Shapley Value近似算法（GTG-SHAPLEY）
+

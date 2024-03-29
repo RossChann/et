@@ -1,15 +1,9 @@
 import tensorflow as tf
 import numpy as np
-import time
-from tqdm import tqdm
 from utils import port_datasets  # 确保能从你的环境中导入
 from utils import port_pretrained_models  # 确保能从你的环境中导入
 from train import elastic_training
 from train import full_training
-
-# elastic trainer
-from selection_solver_DP import selection_DP
-from profiler import profile_parser
 
 
 def federated_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
