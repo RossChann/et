@@ -107,6 +107,7 @@ def federated_elastic_training_compare(client_datasets, ds_test, model_type='res
     input_shape = (224, 224, 3)
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)
+    global_weights = global_model.get_weights()
 
     for global_epoch in range(global_epochs):
         print(f"Global Epoch  {global_epoch + 1}/{global_epochs}")
@@ -142,21 +143,19 @@ def federated_elastic_training_compare(client_datasets, ds_test, model_type='res
         # 对每个客户端权重进行条件更新
         global_weights = global_model.get_weights()
         updated_client_weights = []
-        for client_weight in client_weights:
-            updated_weights = []
-            for global_w, client_w in zip(global_weights, client_weight):
-                if np.any(client_w < global_w):
-                    updated_w = client_w * 0.4 + global_w * 0.6
-                else:
-                    updated_w = client_w
-                updated_weights.append(updated_w)
-            updated_client_weights.append(updated_weights)
+        for layer_index, client_weight in enumerate(client_weights):
+            # 计算更新后的权重
+            adjusted_weight = 0.4 * client_weight + 0.6 * global_weights[layer_index]
+            updated_client_weights.append(adjusted_weight)
 
-        # 计算更新后的平均权重，并设置为全局模型的新权重
+        client_weights.append(updated_client_weights)
+
+
         new_weights = np.mean(updated_client_weights, axis=0)
         global_model.set_weights(new_weights)
+        global_weights = global_model.get_weights()
 
-    # 在全局测试集上评估全局模型
+
     global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                          metrics=['accuracy'])
     test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
