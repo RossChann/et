@@ -1,7 +1,10 @@
 Federated Training Accuracy: 88.61%
 Federated Elastic Training Accuracy: 89.75%
 Federated Elastic Training Compare Accuracy: 89.89%
+x86 ubuntu
 
-Federated Training Accuracy: 89.31%
+
+Federated Training Accuracy: 89.32%
 Federated Elastic Training Accuracy: 86.75%
 Federated Elastic Training Compare Accuracy: 88.61%
+macos
