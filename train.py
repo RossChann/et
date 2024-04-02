@@ -1054,7 +1054,6 @@ def prune_training(
     # sig_stop_handler(None, None)
 
 
-def federated_training(model_fn, client_datasets, ds_test, run_name, logdir, lr=1e-4, weight_decay=5e-4,
                        global_epochs=4, client_epochs=5):
     # 初始化全局模型
     global_model = model_fn()

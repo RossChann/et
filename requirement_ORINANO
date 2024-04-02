@@ -1,0 +1,9 @@
+conda install cudatoolkit=11.2 cudnn -c conda-forge
+pip install tensorflow==2.6
+pip install tensorflow-datasets==4.8.0
+pip install tensorflow-addons==0.16.1
+pip install -U tensorboard_plugin_profile
+pip install vit-keras
+pip install matplotlib tqdm
+pip install keras==2.6.0
+pip install opencv-python
