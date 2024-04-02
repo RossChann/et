@@ -1,8 +1,7 @@
-full_training:epoch=5,round=4,client=3
+Federated Training Accuracy: 88.61%
+Federated Elastic Training Accuracy: 89.75%
+Federated Elastic Training Compare Accuracy: 89.89%
 
-global_test_accuracy:
-89.13 in full_training
-86.23 in elastic_trainer
-88.96% 改了加权0.4client+0.6global
-
-
+Federated Training Accuracy: 89.31%
+Federated Elastic Training Accuracy: 86.75%
+Federated Elastic Training Compare Accuracy: 88.61%
