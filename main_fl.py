@@ -5,6 +5,9 @@ from utils import port_pretrained_models  # 确保能从你的环境中导入
 from train import elastic_training
 from train import full_training
 
+fullacc=[]
+etacc=[]
+et2acc=[]
 
 def federated_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                        num_classes=37):
@@ -49,7 +52,7 @@ def federated_training(client_datasets, ds_test, model_type='resnet50', global_e
                          metrics=['accuracy'])
         test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
         print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
-
+        fullacc =test_accuracy * 100
     return global_model
 
 def federated_elastic_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
@@ -99,7 +102,7 @@ def federated_elastic_training(client_datasets, ds_test, model_type='resnet50', 
                          metrics=['accuracy'])
     test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
     print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
-
+    etacc= test_accuracy * 100
     return global_model
 
 def federated_elastic_training_compare(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
@@ -138,30 +141,47 @@ def federated_elastic_training_compare(client_datasets, ds_test, model_type='res
                 save_txt=False
             )
 
-            client_weights.append(client_model.get_weights())  # 收集训练后的权重
 
-        # 对每个客户端权重进行条件更新
-        global_weights = global_model.get_weights()
-        updated_client_weights = []
-        for layer_index, client_weight in enumerate(client_weights):
-            # 计算更新后的权重
-            adjusted_weight = 0.4 * client_weight + 0.6 * global_weights[layer_index]
-            updated_client_weights.append(adjusted_weight)
+            if global_epoch==0:
+                client_weights.append(client_model.get_weights())
+            else:
+                trained_client_weights = client_model.get_weights()
+                updated_client_weights = []
+                global_weights = global_model.get_weights()
+                for client_layer_weights, global_layer_weights in zip(trained_client_weights, global_weights):
+                    updated_layer_weights = []
+                    for client_weight, global_weight in zip(client_layer_weights.flatten(),
+                                                            global_layer_weights.flatten()):
+                        # 比较每个权重元素，并根据条件更新
+                        if client_weight > global_weight:
+                            updated_weight = client_weight * 0.45 + global_weight * 0.55
+                        else:
+                            updated_weight = client_weight
+                        updated_layer_weights.append(updated_weight)
 
-        client_weights.append(updated_client_weights)
+                    # 将更新后的层权重重新塑形为原始形状，并添加到updated_client_weights中
+                    updated_layer_weights = np.array(updated_layer_weights).reshape(client_layer_weights.shape)
+                    updated_client_weights.append(updated_layer_weights)
+
+                client_weights.append(updated_client_weights)
 
 
-        new_weights = np.mean(updated_client_weights, axis=0)
+        new_weights = np.mean(client_weights, axis=0)
         global_model.set_weights(new_weights)
-        global_weights = global_model.get_weights()
 
 
     global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                          metrics=['accuracy'])
     test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
     print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
+    et2acc=test_accuracy * 100.
 
     return global_model
+
+
+
+
+
 
 if __name__ == '__main__':
     # 设置数据集名称和模型参数
@@ -175,6 +195,13 @@ if __name__ == '__main__':
 
     # 调用port_datasets函数加载数据
     client_datasets, ds_test = port_datasets(dataset_name, (224, 224, 3), batch_size)
-#    federated_training(client_datasets, ds_test, model_type=model_type, num_classes=num_classes)
+
+    federated_training(client_datasets, ds_test, model_type=model_type, num_classes=num_classes)
+    federated_elastic_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
+                               num_classes=37, timing_info=timing_info)
     federated_elastic_training_compare(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                                num_classes=37, timing_info=timing_info)
+    
+    print(fullacc)
+    print(etacc)
+    print(et2acc)
