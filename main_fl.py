@@ -13,7 +13,7 @@ global_accuracy_fetc = 0
 def federated_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                        num_classes=37):
 
-    input_shape = (224, 224, 3)  
+    input_shape = (28,28,1)  
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  
 
@@ -57,9 +57,9 @@ def federated_training(client_datasets, ds_test, model_type='resnet50', global_e
     return global_model
 
 def federated_elastic_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
-                               num_classes=37, timing_info='timing_info'):
+                               num_classes=10, timing_info='timing_info'):
 
-    input_shape = (224, 224, 3)  # Preset input shape
+    input_shape = (28,28,1)  # Preset input shape
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  # Load global model
 
@@ -99,18 +99,18 @@ def federated_elastic_training(client_datasets, ds_test, model_type='resnet50', 
         global_model.set_weights(new_weights)
 
     # Evaluate global model on global test set
-    global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                          metrics=['accuracy'])
-    test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
-    print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
+        test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
+        print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
     global global_accuracy_fet  
     global_accuracy_fet = test_accuracy
 
     return global_model
 
 def federated_elastic_training_compare(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
-                               num_classes=37, timing_info='timing_info'):
-    input_shape = (224, 224, 3)
+                               num_classes=10, timing_info='timing_info', rho_client=0.4, rho_global=0.6):
+    input_shape = (28, 28, 1)
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)
     global_weights = global_model.get_weights()
@@ -141,7 +141,7 @@ def federated_elastic_training_compare(client_datasets, ds_test, model_type='res
                 rho=0.533,
                 disable_random_id=True,
                 save_model=False,
-                save_txt=False
+                save_txt=False,
             )
 
 
@@ -157,7 +157,7 @@ def federated_elastic_training_compare(client_datasets, ds_test, model_type='res
                                                             global_layer_weights.flatten()):
 
                         if client_weight > global_weight:
-                            updated_weight = client_weight * 0.45 + global_weight * 0.55
+                            updated_weight = client_weight * rho_client + global_weight * rho_global
                         else:
                             updated_weight = client_weight
                         updated_layer_weights.append(updated_weight)
@@ -173,10 +173,11 @@ def federated_elastic_training_compare(client_datasets, ds_test, model_type='res
         global_model.set_weights(new_weights)
 
 
-    global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                          metrics=['accuracy'])
-    test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
-    print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
+        test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
+        print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
+
     global global_accuracy_fetc  
     global_accuracy_fetc = test_accuracy
 
@@ -189,22 +190,19 @@ def federated_elastic_training_compare(client_datasets, ds_test, model_type='res
 
 if __name__ == '__main__':
 
-    dataset_name = 'oxford_iiit_pet'
+    dataset_name = 'mnist'
     model_type = 'resnet50'
     model_name = 'resnet50'
-    num_classes = 37  # Oxford IIIT Pet
-    input_size = 224
+    num_classes = 10  
     batch_size = 4
-    timing_info = model_name + '_' + str(input_size) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
-
-
-    client_datasets, ds_test = port_datasets(dataset_name, (224, 224, 3), batch_size)
+    timing_info = model_name + '_' + str(28) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
+    client_datasets, ds_test = port_datasets(dataset_name, (28,28,1), batch_size)
 
     federated_training(client_datasets, ds_test, model_type=model_type, num_classes=num_classes)
     federated_elastic_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
-                               num_classes=37, timing_info=timing_info)
+                               num_classes=10, timing_info=timing_info)
     federated_elastic_training_compare(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
-                               num_classes=37, timing_info=timing_info)
+                               num_classes=10, timing_info=timing_info)
     
     print(f"Federated Training Accuracy: {global_accuracy_ft * 100:.2f}%")
     print(f"Federated Elastic Training Accuracy: {global_accuracy_fet * 100:.2f}%")

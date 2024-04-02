@@ -63,7 +63,7 @@ def sig_stop_handler(sig, frame):
 def port_pretrained_models(
     model_type='resnet50',
     input_shape=(224, 224, 3),
-    num_classes=1000,
+    num_classes=10,
 ):
     """
     This function loads the NN model for training
@@ -181,8 +181,9 @@ def port_pretrained_models(
 
 def port_datasets(
     dataset_name,
-    input_shape,
-    batch_size,
+    input_shape=28,
+    batch_size=4,
+    num_clients=3,
 ):
     """
     This function loads the train and test splits of the requested dataset, and
@@ -245,6 +246,29 @@ def port_datasets(
         ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
             .batch(batch_size * 2) \
             .prefetch(buffer_size=tf.data.AUTOTUNE)
+    elif dataset_name == 'mnist':
+        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+        
+        # 数据预处理
+        x_train = x_train.reshape((60000, 28, 28, 1)) / 255.0
+        x_test = x_test.reshape((10000, 28, 28, 1)) / 255.0
+        
+        # 将训练数据集划分为指定数量的子集
+        client_datasets = []
+        for i in range(num_clients):
+            start = i * len(x_train) // num_clients
+            end = (i + 1) * len(x_train) // num_clients
+            client_datasets.append(tf.data.Dataset.from_tensor_slices((x_train[start:end], y_train[start:end]))
+                                   .map(prep, num_parallel_calls=tf.data.AUTOTUNE)
+                                   .batch(batch_size)
+                                   .prefetch(buffer_size=tf.data.AUTOTUNE))
+        
+        # 创建测试数据集
+        ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+            .batch(batch_size * 2) \
+            .prefetch(buffer_size=tf.data.AUTOTUNE)
+            
     else:
         raise NotImplementedError("This dataset has not been implemented yet")
                               
