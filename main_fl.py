@@ -5,9 +5,10 @@ from utils import port_pretrained_models  # 确保能从你的环境中导入
 from train import elastic_training
 from train import full_training
 
-fullacc=[]
-etacc=[]
-et2acc=[]
+
+global_accuracy_ft = 0
+global_accuracy_fet = 0
+global_accuracy_fetc = 0
 
 def federated_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                        num_classes=37):
@@ -52,7 +53,9 @@ def federated_training(client_datasets, ds_test, model_type='resnet50', global_e
                          metrics=['accuracy'])
         test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
         print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
-        fullacc =test_accuracy * 100
+        global global_accuracy_ft  # 在federated_training函数内部添加
+        global_accuracy_ft = test_accuracy
+
     return global_model
 
 def federated_elastic_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
@@ -102,7 +105,9 @@ def federated_elastic_training(client_datasets, ds_test, model_type='resnet50', 
                          metrics=['accuracy'])
     test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
     print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
-    etacc= test_accuracy * 100
+    global global_accuracy_fet  # 在federated_training函数内部添加
+    global_accuracy_fet = test_accuracy
+
     return global_model
 
 def federated_elastic_training_compare(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
@@ -174,7 +179,8 @@ def federated_elastic_training_compare(client_datasets, ds_test, model_type='res
                          metrics=['accuracy'])
     test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
     print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
-    et2acc=test_accuracy * 100.
+    global global_accuracy_fetc  
+    global_accuracy_fetc = test_accuracy
 
     return global_model
 
@@ -202,6 +208,6 @@ if __name__ == '__main__':
     federated_elastic_training_compare(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                                num_classes=37, timing_info=timing_info)
     
-    print(fullacc)
-    print(etacc)
-    print(et2acc)
+    print(f"Federated Training Accuracy: {global_accuracy_ft * 100:.2f}%")
+    print(f"Federated Elastic Training Accuracy: {global_accuracy_fet * 100:.2f}%")
+    print(f"Federated Elastic Training Compare Accuracy: {global_accuracy_fetc * 100:.2f}%")
