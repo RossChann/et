@@ -159,7 +159,7 @@ if __name__ == '__main__':
     model_name = 'resnet50'
     num_classes = 10  
     batch_size = 4
-    input_shape = (32,32,3)
+    input_shape = 32
     timing_info = model_name + '_' + str(input_shape) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
     client_datasets, ds_test = port_datasets(dataset_name, (32,32,3), batch_size)
 
