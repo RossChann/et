@@ -56,7 +56,8 @@ def federated_training(client_datasets, ds_test, model_type='resnet50', global_e
 
     return global_model
 
-def federated_elastic_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
+
+def federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                                num_classes=10, timing_info='timing_info'):
 
     input_shape = (32, 32, 3)  # Preset input shape
