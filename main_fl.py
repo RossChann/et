@@ -13,7 +13,7 @@ global_accuracy_fetc = 0
 def federated_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                        num_classes=37):
 
-    input_shape = (28,28,1)  
+    input_shape = (32,32,3)  
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  
 
@@ -59,7 +59,7 @@ def federated_training(client_datasets, ds_test, model_type='resnet50', global_e
 def federated_elastic_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                                num_classes=10, timing_info='timing_info'):
 
-    input_shape = (28,28,1)  # Preset input shape
+    input_shape = (32,32,3)  # Preset input shape
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  # Load global model
 
@@ -110,7 +110,7 @@ def federated_elastic_training(client_datasets, ds_test, model_type='resnet50', 
 
 def federated_elastic_training_compare(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                                num_classes=10, timing_info='timing_info', rho_client=0.4, rho_global=0.6):
-    input_shape = (28, 28, 1)
+    input_shape = (32,32,3)
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)
     global_weights = global_model.get_weights()
@@ -195,8 +195,9 @@ if __name__ == '__main__':
     model_name = 'resnet50'
     num_classes = 10  
     batch_size = 4
-    timing_info = model_name + '_' + str(28) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
-    client_datasets, ds_test = port_datasets(dataset_name, (28,28,1), batch_size)
+    input_shape = (32,32,3)
+    timing_info = model_name + '_' + str(input_shape) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
+    client_datasets, ds_test = port_datasets(dataset_name, (32,32,3), batch_size)
 
     federated_training(client_datasets, ds_test, model_type=model_type, num_classes=num_classes)
     federated_elastic_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,

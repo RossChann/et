@@ -10,9 +10,12 @@ Federated Elastic Training Accuracy: %
 Federated Elastic Training Compare Accuracy: %
 macos 
 
-
+G_C=important node for client's_gradient
+FOr all G_C,we have:
+average imporant node for gradient:global_gradient=\frac{sun_{i=1}^{C}{\Delta G_C^2}}{C} 第一轮I
+next round: send global gradient to client 对I_C I_g加权和
 client4
-1.
+1./
 2.90.11%
 3.
 

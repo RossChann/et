@@ -9,7 +9,7 @@ from subprocess import Popen, PIPE
 from threading import Timer
 import sys
 import os
-
+import numpy as np
 
 def my_bool(s):
     return s != 'False'
@@ -61,8 +61,8 @@ def sig_stop_handler(sig, frame):
 ## ENDOF: record mem info ################################################
 
 def port_pretrained_models(
-    model_type='resnet50',
-    input_shape=(224, 224, 3),
+    model_type='mobilenetv2',
+    input_shape=(28,28,1),
     num_classes=10,
 ):
     """
@@ -248,27 +248,36 @@ def port_datasets(
             .prefetch(buffer_size=tf.data.AUTOTUNE)
     elif dataset_name == 'mnist':
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-        
-        # 数据预处理
-        x_train = x_train.reshape((60000, 28, 28, 1)) / 255.0
-        x_test = x_test.reshape((10000, 28, 28, 1)) / 255.0
-        
-        # 将训练数据集划分为指定数量的子集
-        client_datasets = []
-        for i in range(num_clients):
-            start = i * len(x_train) // num_clients
-            end = (i + 1) * len(x_train) // num_clients
-            client_datasets.append(tf.data.Dataset.from_tensor_slices((x_train[start:end], y_train[start:end]))
-                                   .map(prep, num_parallel_calls=tf.data.AUTOTUNE)
-                                   .batch(batch_size)
-                                   .prefetch(buffer_size=tf.data.AUTOTUNE))
-        
-        # 创建测试数据集
+    
+    # 数据预处理
+        x_train = np.repeat(x_train[..., np.newaxis], 3, axis=-1)  # 复制通道以将灰度图像转换为RGB图像
+        x_test = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
+        x_train = np.pad(x_train, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')  # 填充图像以达到32x32的大小
+        x_test = np.pad(x_test, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')
+        x_train = x_train.astype('float32') / 255.0  # 归一化像素值
+        x_test = x_test.astype('float32') / 255.0
+    
+        # 根据标签将训练数据集划分为4个子集
+        client_datasets = [[] for _ in range(4)]
+        for x, y in zip(x_train, y_train):
+          client_id = y // 3  # 将标签范围划分为0-2, 3-5, 6-8, 9
+          client_datasets[client_id].append((x, y))
+        # 将每个客户端的数据转换为tf.data.Dataset
+        for i in range(4):
+            client_images = [x for x, _ in client_datasets[i]]
+            client_labels = [y for _, y in client_datasets[i]]
+            client_images = np.array(client_images)
+            client_labels = np.array(client_labels)
+            client_datasets[i] = tf.data.Dataset.from_tensor_slices((client_images, client_labels))
+            client_datasets[i] = client_datasets[i].map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+                                                .batch(batch_size) \
+                                                .prefetch(buffer_size=tf.data.AUTOTUNE)
+    
+    # 创建测试数据集
         ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
         ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-            .batch(batch_size * 2) \
-            .prefetch(buffer_size=tf.data.AUTOTUNE)
-            
+                     .batch(batch_size * 2) \
+                     .prefetch(buffer_size=tf.data.AUTOTUNE)
     else:
         raise NotImplementedError("This dataset has not been implemented yet")
                               
