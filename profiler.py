@@ -484,9 +484,9 @@ def profile_parser(
 def main():
     parser = argparse.ArgumentParser(description='Tensor timing profiling')
     parser.add_argument('--model_name', type=str, default='resnet50', help='valid model names are resnet50, vgg16, mobilenetv2, vit')
-    parser.add_argument('--input_size', type=int, default=224, help='input resolution, e.g., 224 stands for 224x224')
+    parser.add_argument('--input_size', type=int, default=32, help='input resolution, e.g., 224 stands for 224x224')
     parser.add_argument('--batch_size', type=int, default=4, help='batch size used to run during profiling')
-    parser.add_argument('--num_classes', type=int, default=200, help='number of categories model can classify')
+    parser.add_argument('--num_classes', type=int, default=10, help='number of categories model can classify')
     # parser.add_argument('--num_iterations', type=int, default=5, help='number of backward passes to run during profiling')
     
     args = parser.parse_args()
