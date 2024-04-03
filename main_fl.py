@@ -10,13 +10,14 @@ import time
 from tqdm import tqdm
 import os
 from utils import clear_cache_and_rec_usage
+import keras as keras
 
 
 global_accuracy_ft = 0
 global_accuracy_fet = 0
 global_accuracy_fetc = 0
 
-I_g=[] # global_importance
+
 
 
 def full_training(
@@ -315,7 +316,13 @@ def elastic_training(
         t2 = time.time()
         print("per epoch time(s) including validation:", t2 - t0)
         total_time_1 += (t2 - t0)
-    client_gradients = [weight.numpy() for weight in model.trainable_weights]
+    
+    # client gradient
+        with tf.GradientTape() as tape:
+            y_pred = model(ds_train, training=True)
+            loss = loss_fn_cls(ds_train, y_pred)
+            gradients = tape.gradient(loss, model.trainable_weights)
+        gradients = [grad.numpy() for grad in gradients]
 
     # print("total time excluding validation (s):", total_time_0)
     # print("total time including validation (s):", total_time_1)
@@ -329,7 +336,7 @@ def elastic_training(
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
     # sig_stop_handler(None, None)
-    return I,client_gradients
+    return I,gradients
 
 def elastic_training_second(
     model,
@@ -348,6 +355,7 @@ def elastic_training_second(
     disable_random_id=False,
     save_model=False,
     save_txt=False,
+    I_g=None
 ):
     """Train with ElasticTrainer"""
 
@@ -442,7 +450,6 @@ def elastic_training_second(
             for x_probe, y_probe in ds_train.take(1):
                 dw, I = compute_dw(x_probe, y_probe)
                 # federated learning
-                global I_g
                 I= 0.4 * I+ 0.6 * I_g
                 I = -I.numpy()
                 I = np.flip(I)
@@ -505,7 +512,12 @@ def elastic_training_second(
         t2 = time.time()
         print("per epoch time(s) including validation:", t2 - t0)
         total_time_1 += (t2 - t0)
-    
+
+        with tf.GradientTape() as tape:
+            y_pred = model(ds_train, training=True)
+            loss = loss_fn_cls(ds_train, y_pred)
+            gradients = tape.gradient(loss, model.trainable_weights)
+            gradients = [grad.numpy() for grad in gradients]
     # print("total time excluding validation (s):", total_time_0)
     # print("total time including validation (s):", total_time_1)
     best_validation_acc = best_validation_acc.numpy() * 100
@@ -518,7 +530,7 @@ def elastic_training_second(
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
     # sig_stop_handler(None, None)
-    return I
+    return I,gradients
     
 def federated_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                        num_classes=37):
@@ -571,106 +583,65 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                                num_classes=10, timing_info='timing_info'):
 
 
-    def compute_dw_g():
-        new_weights = np.mean(client_weights, axis=0)
-        # Compute global model importance measure in the first epoch
-        global_weights_before = global_model.get_weights()
-        global_model.set_weights(new_weights)
-        global_weights_after = global_model.get_weights()
-        global_weight_delta = [after - before for after, before in zip(global_weights_after, global_weights_before)]
-        global_weight_delta = tf.convert_to_tensor(global_weight_delta)
-        return global_weight_delta
+    def compute_dw_g(G_g):
+        w_old = [w.value() for w in global_model.trainable_weights]
+        w_new = [w - (1e-4) * g for w, g in zip(w_old, G_g)]
+
+        for w, new_w in zip(global_model.trainable_weights, w_new):
+            w.assign(new_w)
+
+    def compute_G_g(all_client_gradients):      
+       num_clients = len(all_client_gradients)
+       num_gradients = len(all_client_gradients[0])
+       global_model_gradients = [np.zeros_like(all_client_gradients[0][i]) for i in range(num_gradients)]
+       for i in range(num_gradients):
+        # 计算所有客户端在当前位置上的梯度的平方和
+        sum_squared_gradients = np.sum([np.square(client_gradients[i]) for client_gradients in all_client_gradients], axis=0)
+        
+        # 将平方和除以客户端数量,得到全局模型在当前位置上的梯度
+        global_model_gradients[i] = sum_squared_gradients / num_clients
     
+        return global_model_gradients
 
-    def compute_G_g():
-        global_gradient = [tf.zeros_like(grad) for grad in client_gradients[0]]
-
-    # Sum the squares of client gradients
-        for client_grad in client_gradients:
-            for i, grad in enumerate(client_grad):
-                global_gradient[i] += tf.square(grad)
-
-    # Divide by the number of clients to get the average
-        for i, grad in enumerate(global_gradient):
-            global_gradient[i] = grad / num_clients
-
-        return global_gradient
-    
-
-    def compute_I_g(G_g,dw_g):
-        global_importance = [tf.reduce_sum(grad * delta) for grad, delta in zip(G_g, dw_g)]
-        global_importance = tf.convert_to_tensor(global_importance)
-        global_importance = global_importance / tf.reduce_max(tf.abs(global_importance))
-        I_g.append(global_importance)
+    def compute_I_g(G_g, dw_g):
+        G_g_tensors = [tf.convert_to_tensor(grad) for grad in G_g]
+        dw_g_tensors = [tf.convert_to_tensor(dw) for dw in dw_g]
+        I_g = [tf.reduce_sum((grad_k * dw_k)) for (grad_k, dw_k) in zip(G_g_tensors, dw_g_tensors)]
+        I_g = tf.convert_to_tensor(I_g)
+        I_g = I_g / tf.reduce_max(tf.abs(I_g))
         return I_g
+    
 
     input_shape = (32, 32, 3)  # Preset input shape
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  # Load global model
-
-    # main training process
+   
     for global_epoch in range(global_epochs):
         print(f"Global Epoch {global_epoch + 1}/{global_epochs}")
-        client_weights = []
-        client_importances = []
-        client_gradients = []
+        all_client_gradients = []
 
         for client_id, ds_train in enumerate(client_datasets):
             print(f"Training on client {client_id + 1}/{len(client_datasets)}")
             client_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
-                                                  num_classes=num_classes)  # Create model for each client
-            client_model.set_weights(global_model.get_weights())  # Initialize with global model weights
-
+                                                  num_classes=num_classes)  # Create model for each client and initailze the weights
             if global_epoch == 0:
-                I_C,gradients = elastic_training(
-                model=client_model,
-                model_name=model_type,
-                ds_train=ds_train,
-                ds_test=ds_test,
-                run_name='auto',
-                logdir='logs',
-                timing_info=timing_info,
-                optim='sgd',
-                lr=1e-4,
-                weight_decay=5e-4,
-                epochs=5,
-                interval=5,
-                rho=0.533,
-                disable_random_id=True,
-                save_model=False,
-                save_txt=False
-            )
-                client_weights.append(client_model.get_weights())  # Collect trained weights
-                client_importances.append(I_C)  # Collect client importance measures
-                client_gradients.append(gradients)  # Collect client gradients
-            else:
-                I_C = elastic_training_second(
-                model=client_model,
-                model_name=model_type,
-                ds_train=ds_train,
-                ds_test=ds_test,
-                run_name='auto',
-                logdir='logs',
-                timing_info=timing_info,
-                optim='sgd',
-                lr=1e-4,
-                weight_decay=5e-4,
-                epochs=5,
-                interval=5,
-                rho=0.533,
-                disable_random_id=True,
-                save_model=False,
-                save_txt=False
-            )
-                client_weights.append(client_model.get_weights())  # Collect trained weights
-                client_importances.append(I_C)  # Collect client importance measures
-                client_gradients.append(gradients)
+                I_c,client_gradients=elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)
 
-                dw_g=compute_dw_g()
-                G_g=compute_G_g()
-                global I_g
-                I_g=compute_I_g(G_g,dw_g)
-                
+                all_client_gradients.append(client_gradients)
+                G_g=compute_G_g(all_client_gradients)
+
+                dw_g=compute_dw_g(G_g=G_g)
+                I_g=compute_I_g(G_g=G_g,dw_g=dw_g)
+
+            else:
+                I_c,client_gradients=elastic_training_second(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False,I_g=I_g)
+
+                all_client_gradients.append(client_gradients)
+                G_g=compute_G_g(all_client_gradients)
+
+                dw_g=compute_dw_g(G_g=G_g)
+                I_g=compute_I_g(G_g=G_g,dw_g=dw_g)
+
 
         global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
 

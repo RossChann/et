@@ -209,21 +209,7 @@ elif train_type == 'prunetrain':
         save_model=save_model,
         save_txt=save_txt,
     )
-elif train_type == 'federated_training':
-    # 假设已经通过某种方式将训练数据集分配给了各个客户端
-    # 这里使用了简化的方法来表示这个过程，实际应用中可能需要复杂的数据预处理和分配策略
-    client_datasets = [train_dataset]  # 这里仅为示例，实际上应该是将数据集分割为多个子集
-    federated_training(
-        model_fn=lambda: model,  # 提供一个函数来构建新的模型实例
-        client_datasets=client_datasets,
-        ds_test=test_dataset,
-        run_name=run_name,
-        logdir=logdir,
-        lr=learning_rate,
-        weight_decay=weight_decay,
-        global_epochs=4,  # 全局训练轮次
-        client_epochs=num_epochs,  # 客户端训练轮次
-        batch_size=batch_size)
+
 else:
     raise NotImplementedError(f"Training scheme {train_type} has not been implemented yet")
 

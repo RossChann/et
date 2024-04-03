@@ -1,7 +1,7 @@
-def k():
-    global x
-    x=2
+def K(a):
+    a=2
 
-x=0
-k()
-print(x)
+def p():
+    a=1
+    k(a)
+print(a)
