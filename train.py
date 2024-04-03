@@ -588,3 +588,4 @@ def elastic_training(
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
     # sig_stop_handler(None, None)
+    return I
