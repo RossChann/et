@@ -204,12 +204,13 @@ def elastic_training(
     print(f"RUNID: {runid}")
 
     var_list = []
-
+    gradients_list = []
     def train_step(x, y):
         with tf.GradientTape() as tape:
             y_pred = model(x, training=True)
             loss = loss_fn_cls(y, y_pred)
         gradients = tape.gradient(loss, var_list)
+        gradients_list.append(gradients)
         optimizer.apply_gradients(zip(gradients, var_list))
         accuracy(y, y_pred)
         cls_loss(loss)
@@ -317,15 +318,8 @@ def elastic_training(
         print("per epoch time(s) including validation:", t2 - t0)
         total_time_1 += (t2 - t0)
     
-    # client gradient
-        with tf.GradientTape() as tape:
-            y_pred = model(ds_train, training=True)
-            loss = loss_fn_cls(ds_train, y_pred)
-            gradients = tape.gradient(loss, model.trainable_weights)
-        gradients = [grad.numpy() for grad in gradients]
 
-    # print("total time excluding validation (s):", total_time_0)
-    # print("total time including validation (s):", total_time_1)
+    
     best_validation_acc = best_validation_acc.numpy() * 100
     total_time_0 /= 3600
     print('===============================================')
@@ -336,7 +330,7 @@ def elastic_training(
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
     # sig_stop_handler(None, None)
-    return I,gradients
+    return I,gradients_list
 
 def elastic_training_second(
     model,
@@ -398,12 +392,13 @@ def elastic_training_second(
     print(f"RUNID: {runid}")
 
     var_list = []
-
+    gradients_list = []
     def train_step(x, y):
         with tf.GradientTape() as tape:
             y_pred = model(x, training=True)
             loss = loss_fn_cls(y, y_pred)
         gradients = tape.gradient(loss, var_list)
+        gradients_list.append(gradients)
         optimizer.apply_gradients(zip(gradients, var_list))
         accuracy(y, y_pred)
         cls_loss(loss)
@@ -530,7 +525,7 @@ def elastic_training_second(
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
     # sig_stop_handler(None, None)
-    return I,gradients
+    return I,gradients_list
     
 def federated_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                        num_classes=37):
@@ -590,18 +585,20 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
         for w, new_w in zip(global_model.trainable_weights, w_new):
             w.assign(new_w)
 
-    def compute_G_g(all_client_gradients):      
-       num_clients = len(all_client_gradients)
-       num_gradients = len(all_client_gradients[0])
-       global_model_gradients = [np.zeros_like(all_client_gradients[0][i]) for i in range(num_gradients)]
-       for i in range(num_gradients):
-        # 计算所有客户端在当前位置上的梯度的平方和
-        sum_squared_gradients = np.sum([np.square(client_gradients[i]) for client_gradients in all_client_gradients], axis=0)
-        
-        # 将平方和除以客户端数量,得到全局模型在当前位置上的梯度
-        global_model_gradients[i] = sum_squared_gradients / num_clients
-    
-        return global_model_gradients
+    def compute_G_g(gradients_list):
+        global_gradients = []
+        num_clients = 4
+        num_batches = 4
+
+        for i in range(len(gradients_list[0])):
+            grad_sum = tf.zeros_like(gradients_list[0][i])
+            for j in range(num_clients):
+                for l in range(num_batches):
+                    grad_sum += gradients_list[j * num_batches + l][i] ** 2
+            global_grad = grad_sum / (num_clients * num_batches)
+            global_gradients.append(global_grad)
+
+        return G_g
 
     def compute_I_g(G_g, dw_g):
         G_g_tensors = [tf.convert_to_tensor(grad) for grad in G_g]
