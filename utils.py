@@ -258,12 +258,12 @@ def port_datasets(
         x_test = x_test.astype('float32') / 255.0
     
         # 根据标签将训练数据集划分为4个子集
-        client_datasets = [[] for _ in range(4)]
+        client_datasets = [[] for _ in range(2)]
         for x, y in zip(x_train, y_train):
-          client_id = y // 3  # 将标签范围划分为0-2, 3-5, 6-8, 9
+          client_id = y // 5  # 将标签范围划分为0-2, 3-5, 6-8, 9
           client_datasets[client_id].append((x, y))
         # 将每个客户端的数据转换为tf.data.Dataset
-        for i in range(4):
+        for i in range(2):
             client_images = [x for x, _ in client_datasets[i]]
             client_labels = [y for _, y in client_datasets[i]]
             client_images = np.array(client_images)
