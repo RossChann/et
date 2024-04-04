@@ -260,7 +260,7 @@ def port_datasets(
         # 根据标签将训练数据集划分为4个子集
         client_datasets = [[] for _ in range(2)]
         for x, y in zip(x_train, y_train):
-          client_id = y // 5  # 将标签范围划分为0-2, 3-5, 6-8, 9
+          client_id = y // 5
           client_datasets[client_id].append((x, y))
         # 将每个客户端的数据转换为tf.data.Dataset
         for i in range(2):
