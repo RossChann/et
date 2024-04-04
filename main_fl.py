@@ -452,11 +452,14 @@ if __name__ == '__main__':
     model_name = 'resnet50'
     num_classes = 37
     batch_size = 4
-    input_shape = 224
-    timing_info = model_name + '_' + str(input_shape) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
-    client_datasets, ds_test = port_datasets(dataset_name, (224,224,3), batch_size)
+    input_size = 224
+    input_shape = (input_size,input_size,3)
+    timing_info = model_name + '_' + str(input_size) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
+    
+    # port datasets
+    client_datasets, ds_test = port_datasets(dataset_name, input_shape, batch_size)
 
-    #federated_training(client_datasets, ds_test, model_type=model_type, num_classes=num_classes)
+    #train 
     federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                                num_classes=37, timing_info=timing_info)
     

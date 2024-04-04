@@ -230,7 +230,7 @@ def port_datasets(
                                 .prefetch(buffer_size=tf.data.AUTOTUNE)
     
     elif dataset_name == 'oxford_iiit_pet':
-        # 划分训练数据集为三个相等的部分
+        
         splits= tfds.even_splits('train', n=2)
         client_datasets = []
 
@@ -242,7 +242,7 @@ def port_datasets(
             client_datasets.append(ds_train)
 
         ds_test = tfds.load('oxford_iiit_pet', split='test', as_supervised=True)
-        # 应用数据预处理、批处理和预取
+        
         ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
             .batch(batch_size * 2) \
             .prefetch(buffer_size=tf.data.AUTOTUNE)
