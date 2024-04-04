@@ -392,10 +392,9 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
         aggregated_gradients = []
 
         for gradients in zip(*client_gradients):
-            squared_gradients = [tf.square(grad) for grad in gradients]
-            sum_squared_gradients = tf.reduce_sum(squared_gradients, axis=0)
-            aggregated_grad = sum_squared_gradients / num_clients
-            aggregated_gradients.append(aggregated_grad)
+            squared_sum = tf.reduce_sum(tf.square(gradients), axis=0)
+            mean_gradient = squared_sum / num_clients
+            aggregated_gradients.append(mean_gradient)
 
         return aggregated_gradients
       
@@ -431,15 +430,19 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 ettrain2
                 client_gradients.append(gradients) # client gradient list
                 
-        
+        G_g=aggregate_gradients(client_gradients)
         
            
               
 ###############################################
+        '''
         for i, gradients in enumerate(client_gradients):
             print(f"Round {i + 1}:")
             for j, grad in enumerate(gradients):
                 print(f"  Gradient {j + 1}: shape={tf.shape(grad)}, dtype={grad.dtype}")
+        '''
+        for i, grad in enumerate(G_g):
+            print(f"  Gradient {i + 1}: shape={tf.shape(grad)}, dtype={grad.dtype}")
 
         global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
 
