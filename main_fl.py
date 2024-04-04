@@ -384,7 +384,7 @@ def federated_training(client_datasets, ds_test, model_type='resnet50', global_e
 
 
 def federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
-                               num_classes=10, timing_info='timing_info'):
+                               num_classes=37, timing_info='timing_info'):
 
 #######################
     def aggregate_gradients(client_gradients):
@@ -407,7 +407,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
         return dw
 
 #######################
-    input_shape = (32, 32, 3)  # Preset input shape
+    input_shape = (224,224,3)  # Preset input shape
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  # Load global model
 
@@ -447,18 +447,18 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
 
 if __name__ == '__main__':
 
-    dataset_name = 'mnist'
+    dataset_name = 'oxford_iiit_pet'
     model_type = 'resnet50'
     model_name = 'resnet50'
-    num_classes = 10  
+    num_classes = 37
     batch_size = 4
-    input_shape = 32
+    input_shape = 224
     timing_info = model_name + '_' + str(input_shape) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
-    client_datasets, ds_test = port_datasets(dataset_name, (32,32,3), batch_size)
+    client_datasets, ds_test = port_datasets(dataset_name, (224,224,3), batch_size)
 
     #federated_training(client_datasets, ds_test, model_type=model_type, num_classes=num_classes)
     federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
-                               num_classes=10, timing_info=timing_info)
+                               num_classes=37, timing_info=timing_info)
     
     print(f"Federated Training Accuracy: {global_accuracy_ft * 100:.2f}%")
     print(f"Federated Elastic Training Accuracy: {global_accuracy_fet * 100:.2f}%")

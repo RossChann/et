@@ -61,9 +61,9 @@ def sig_stop_handler(sig, frame):
 ## ENDOF: record mem info ################################################
 
 def port_pretrained_models(
-    model_type='mobilenetv2',
-    input_shape=(28,28,1),
-    num_classes=10,
+    model_type=None,
+    input_shape=None,
+    num_classes=None,
 ):
     """
     This function loads the NN model for training
@@ -231,7 +231,7 @@ def port_datasets(
     
     elif dataset_name == 'oxford_iiit_pet':
         # 划分训练数据集为三个相等的部分
-        splits= tfds.even_splits('train', n=3)
+        splits= tfds.even_splits('train', n=2)
         client_datasets = []
 
         for split in splits:
