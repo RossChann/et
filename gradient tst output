@@ -1,430 +1,68 @@
-gradient 1:
-  Gradient 1: shape=[ 7  7  3 64], dtype=<dtype: 'float32'>
-  Gradient 2: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 3: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 4: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 5: shape=[ 1  1 64 64], dtype=<dtype: 'float32'>
-  Gradient 6: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 7: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 8: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 9: shape=[ 3  3 64 64], dtype=<dtype: 'float32'>
-  Gradient 10: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 11: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 12: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 13: shape=[  1   1  64 256], dtype=<dtype: 'float32'>
-  Gradient 14: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 15: shape=[  1   1  64 256], dtype=<dtype: 'float32'>
-  Gradient 16: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 17: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 18: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 19: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 20: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 21: shape=[  1   1 256  64], dtype=<dtype: 'float32'>
-  Gradient 22: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 23: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 24: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 25: shape=[ 3  3 64 64], dtype=<dtype: 'float32'>
-  Gradient 26: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 27: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 28: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 29: shape=[  1   1  64 256], dtype=<dtype: 'float32'>
-  Gradient 30: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 31: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 32: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 33: shape=[  1   1 256  64], dtype=<dtype: 'float32'>
-  Gradient 34: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 35: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 36: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 37: shape=[ 3  3 64 64], dtype=<dtype: 'float32'>
-  Gradient 38: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 39: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 40: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 41: shape=[  1   1  64 256], dtype=<dtype: 'float32'>
-  Gradient 42: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 43: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 44: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 45: shape=[  1   1 256 128], dtype=<dtype: 'float32'>
-  Gradient 46: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 47: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 48: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 49: shape=[  3   3 128 128], dtype=<dtype: 'float32'>
-  Gradient 50: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 51: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 52: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 53: shape=[  1   1 256 512], dtype=<dtype: 'float32'>
-  Gradient 54: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 55: shape=[  1   1 128 512], dtype=<dtype: 'float32'>
-  Gradient 56: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 57: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 58: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 59: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 60: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 61: shape=[  1   1 512 128], dtype=<dtype: 'float32'>
-  Gradient 62: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 63: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 64: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 65: shape=[  3   3 128 128], dtype=<dtype: 'float32'>
-  Gradient 66: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 67: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 68: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 69: shape=[  1   1 128 512], dtype=<dtype: 'float32'>
-  Gradient 70: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 71: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 72: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 73: shape=[  1   1 512 128], dtype=<dtype: 'float32'>
-  Gradient 74: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 75: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 76: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 77: shape=[  3   3 128 128], dtype=<dtype: 'float32'>
-  Gradient 78: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 79: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 80: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 81: shape=[  1   1 128 512], dtype=<dtype: 'float32'>
-  Gradient 82: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 83: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 84: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 85: shape=[  1   1 512 128], dtype=<dtype: 'float32'>
-  Gradient 86: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 87: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 88: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 89: shape=[  3   3 128 128], dtype=<dtype: 'float32'>
-  Gradient 90: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 91: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 92: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 93: shape=[  1   1 128 512], dtype=<dtype: 'float32'>
-  Gradient 94: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 95: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 96: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 97: shape=[  1   1 512 256], dtype=<dtype: 'float32'>
-  Gradient 98: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 99: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 100: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 101: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 102: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 103: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 104: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 105: shape=[   1    1  512 1024], dtype=<dtype: 'float32'>
-  Gradient 106: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 107: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 108: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 109: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 110: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 111: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 112: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 113: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 114: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 115: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 116: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 117: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 118: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 119: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 120: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 121: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 122: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 123: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 124: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 125: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 126: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 127: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 128: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 129: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 130: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 131: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 132: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 133: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 134: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 135: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 136: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 137: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 138: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 139: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 140: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 141: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 142: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 143: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 144: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 145: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 146: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 147: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 148: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 149: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 150: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 151: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 152: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 153: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 154: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 155: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 156: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 157: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 158: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 159: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 160: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 161: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 162: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 163: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 164: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 165: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 166: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 167: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 168: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 169: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 170: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 171: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 172: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 173: shape=[   1    1 1024  512], dtype=<dtype: 'float32'>
-  Gradient 174: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 175: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 176: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 177: shape=[  3   3 512 512], dtype=<dtype: 'float32'>
-  Gradient 178: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 179: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 180: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 181: shape=[   1    1 1024 2048], dtype=<dtype: 'float32'>
-  Gradient 182: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 183: shape=[   1    1  512 2048], dtype=<dtype: 'float32'>
-  Gradient 184: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 185: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 186: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 187: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 188: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 189: shape=[   1    1 2048  512], dtype=<dtype: 'float32'>
-  Gradient 190: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 191: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 192: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 193: shape=[  3   3 512 512], dtype=<dtype: 'float32'>
-  Gradient 194: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 195: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 196: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 197: shape=[   1    1  512 2048], dtype=<dtype: 'float32'>
-  Gradient 198: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 199: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 200: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 201: shape=[   1    1 2048  512], dtype=<dtype: 'float32'>
-  Gradient 202: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 203: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 204: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 205: shape=[  3   3 512 512], dtype=<dtype: 'float32'>
-  Gradient 206: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 207: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 208: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 209: shape=[   1    1  512 2048], dtype=<dtype: 'float32'>
-  Gradient 210: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 211: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 212: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 213: shape=[2048   10], dtype=<dtype: 'float32'>
-  Gradient 214: shape=[10], dtype=<dtype: 'float32'>
-gradient 2:
-  Gradient 1: shape=[ 7  7  3 64], dtype=<dtype: 'float32'>
-  Gradient 2: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 3: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 4: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 5: shape=[ 1  1 64 64], dtype=<dtype: 'float32'>
-  Gradient 6: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 7: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 8: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 9: shape=[ 3  3 64 64], dtype=<dtype: 'float32'>
-  Gradient 10: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 11: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 12: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 13: shape=[  1   1  64 256], dtype=<dtype: 'float32'>
-  Gradient 14: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 15: shape=[  1   1  64 256], dtype=<dtype: 'float32'>
-  Gradient 16: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 17: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 18: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 19: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 20: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 21: shape=[  1   1 256  64], dtype=<dtype: 'float32'>
-  Gradient 22: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 23: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 24: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 25: shape=[ 3  3 64 64], dtype=<dtype: 'float32'>
-  Gradient 26: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 27: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 28: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 29: shape=[  1   1  64 256], dtype=<dtype: 'float32'>
-  Gradient 30: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 31: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 32: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 33: shape=[  1   1 256  64], dtype=<dtype: 'float32'>
-  Gradient 34: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 35: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 36: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 37: shape=[ 3  3 64 64], dtype=<dtype: 'float32'>
-  Gradient 38: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 39: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 40: shape=[64], dtype=<dtype: 'float32'>
-  Gradient 41: shape=[  1   1  64 256], dtype=<dtype: 'float32'>
-  Gradient 42: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 43: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 44: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 45: shape=[  1   1 256 128], dtype=<dtype: 'float32'>
-  Gradient 46: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 47: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 48: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 49: shape=[  3   3 128 128], dtype=<dtype: 'float32'>
-  Gradient 50: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 51: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 52: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 53: shape=[  1   1 256 512], dtype=<dtype: 'float32'>
-  Gradient 54: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 55: shape=[  1   1 128 512], dtype=<dtype: 'float32'>
-  Gradient 56: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 57: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 58: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 59: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 60: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 61: shape=[  1   1 512 128], dtype=<dtype: 'float32'>
-  Gradient 62: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 63: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 64: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 65: shape=[  3   3 128 128], dtype=<dtype: 'float32'>
-  Gradient 66: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 67: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 68: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 69: shape=[  1   1 128 512], dtype=<dtype: 'float32'>
-  Gradient 70: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 71: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 72: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 73: shape=[  1   1 512 128], dtype=<dtype: 'float32'>
-  Gradient 74: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 75: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 76: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 77: shape=[  3   3 128 128], dtype=<dtype: 'float32'>
-  Gradient 78: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 79: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 80: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 81: shape=[  1   1 128 512], dtype=<dtype: 'float32'>
-  Gradient 82: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 83: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 84: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 85: shape=[  1   1 512 128], dtype=<dtype: 'float32'>
-  Gradient 86: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 87: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 88: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 89: shape=[  3   3 128 128], dtype=<dtype: 'float32'>
-  Gradient 90: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 91: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 92: shape=[128], dtype=<dtype: 'float32'>
-  Gradient 93: shape=[  1   1 128 512], dtype=<dtype: 'float32'>
-  Gradient 94: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 95: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 96: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 97: shape=[  1   1 512 256], dtype=<dtype: 'float32'>
-  Gradient 98: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 99: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 100: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 101: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 102: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 103: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 104: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 105: shape=[   1    1  512 1024], dtype=<dtype: 'float32'>
-  Gradient 106: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 107: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 108: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 109: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 110: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 111: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 112: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 113: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 114: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 115: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 116: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 117: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 118: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 119: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 120: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 121: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 122: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 123: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 124: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 125: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 126: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 127: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 128: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 129: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 130: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 131: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 132: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 133: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 134: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 135: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 136: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 137: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 138: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 139: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 140: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 141: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 142: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 143: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 144: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 145: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 146: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 147: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 148: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 149: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 150: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 151: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 152: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 153: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 154: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 155: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 156: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 157: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 158: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 159: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 160: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 161: shape=[   1    1 1024  256], dtype=<dtype: 'float32'>
-  Gradient 162: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 163: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 164: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 165: shape=[  3   3 256 256], dtype=<dtype: 'float32'>
-  Gradient 166: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 167: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 168: shape=[256], dtype=<dtype: 'float32'>
-  Gradient 169: shape=[   1    1  256 1024], dtype=<dtype: 'float32'>
-  Gradient 170: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 171: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 172: shape=[1024], dtype=<dtype: 'float32'>
-  Gradient 173: shape=[   1    1 1024  512], dtype=<dtype: 'float32'>
-  Gradient 174: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 175: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 176: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 177: shape=[  3   3 512 512], dtype=<dtype: 'float32'>
-  Gradient 178: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 179: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 180: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 181: shape=[   1    1 1024 2048], dtype=<dtype: 'float32'>
-  Gradient 182: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 183: shape=[   1    1  512 2048], dtype=<dtype: 'float32'>
-  Gradient 184: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 185: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 186: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 187: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 188: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 189: shape=[   1    1 2048  512], dtype=<dtype: 'float32'>
-  Gradient 190: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 191: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 192: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 193: shape=[  3   3 512 512], dtype=<dtype: 'float32'>
-  Gradient 194: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 195: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 196: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 197: shape=[   1    1  512 2048], dtype=<dtype: 'float32'>
-  Gradient 198: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 199: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 200: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 201: shape=[   1    1 2048  512], dtype=<dtype: 'float32'>
-  Gradient 202: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 203: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 204: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 205: shape=[  3   3 512 512], dtype=<dtype: 'float32'>
-  Gradient 206: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 207: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 208: shape=[512], dtype=<dtype: 'float32'>
-  Gradient 209: shape=[   1    1  512 2048], dtype=<dtype: 'float32'>
-  Gradient 210: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 211: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 212: shape=[2048], dtype=<dtype: 'float32'>
-  Gradient 213: shape=[2048   10], dtype=<dtype: 'float32'>
-  Gradient 214: shape=[10], dtype=<dtype: 'float32'>
+ -1.46717988e-02  8.63959780e-04  4.68578655e-04 -2.21087802e-02
+ -3.45378974e-03 -2.43278071e-02  5.58395358e-03  2.82672839e-03
+ -2.28814557e-02 -7.81326089e-03  1.87594742e-02  5.95768041e-04
+  1.27193583e-02  7.09740724e-03 -1.46654807e-02 -5.79239859e-05
+ -8.14250161e-05  1.52285292e-03 -5.31754864e-04  5.37754130e-03
+ -1.76057161e-03  2.07392825e-03  6.27953734e-04 -1.31594308e-04
+ -7.23910378e-03 -2.31915881e-04  5.10982354e-04 -6.97337836e-03
+ -7.87325762e-03 -2.64242204e-04 -2.17568967e-03 -6.56225136e-04
+  6.30677212e-03 -6.28574111e-04  4.43982333e-03  2.06867363e-02
+  2.28885771e-03  6.73426222e-03  4.77302165e-05 -2.95844511e-03
+  9.82626225e-04 -4.72809281e-03  0.00000000e+00 -9.88466432e-04
+  4.65278485e-04 -3.81163182e-03  3.54075851e-03 -8.98499787e-03
+ -1.00684213e-03  1.56437163e-04  9.58228763e-03  4.90537612e-03
+ -4.45046928e-04  1.49591907e-03 -6.93600741e-04  6.59077615e-03
+  9.08699073e-03 -1.38616720e-02  9.51296370e-03  4.06894553e-03
+  8.30052304e-05  5.38186650e-05  3.51737370e-04  1.27127487e-02
+  1.41219180e-05  1.72495190e-02 -1.73922861e-03 -9.39120352e-03
+  7.75026449e-04 -2.23021852e-04 -1.24738814e-04  1.14147447e-03
+  2.75312574e-04  1.32718007e-03 -2.50375364e-03  3.99756199e-03
+  9.37835034e-03 -7.25665689e-03  6.06427621e-03 -1.11406704e-03
+ -1.09458109e-02 -3.08619672e-03  1.00917844e-02  5.62255085e-03
+ -2.61326600e-02 -4.92076098e-04  9.81872203e-04 -3.24469758e-03
+  1.80122741e-02  3.49467131e-03  3.37852862e-06  3.00459424e-03
+ -5.84047375e-05 -4.31643380e-03  1.21441274e-03 -2.88848369e-03
+  1.20142603e-03 -1.80036505e-03 -8.43805246e-05  4.58579103e-04
+  1.22040696e-02  3.66331660e-03 -7.67545193e-04 -1.53296925e-02]
+    Values: [[[[ 0.0000000e+00 -7.6193101e-07 -4.1528079e-03 ...  2.9391295e-03
+     4.4709504e-05 -1.3715891e-03]
+   [ 1.4596733e-03  0.0000000e+00 -2.0159598e-05 ...  1.7746752e-02
+     1.0050179e-02  4.3089494e-05]
+   [ 5.7129480e-04  0.0000000e+00  1.5954349e-08 ...  2.5624651e-03
+     1.1527395e-04  0.0000000e+00]
+   ...
+   [ 3.2433826e-03 -7.6393007e-08 -7.0915008e-03 ...  2.7676025e-02
+     1.1295899e-02 -2.5185223e-03]
+   [ 6.1734095e-03  0.0000000e+00 -1.4196441e-04 ...  5.8836993e-02
+     2.6268510e-02  2.6448979e-04]
+   [ 1.1865984e-02 -1.8713574e-05 -5.9947497e-03 ...  5.5793669e-02
+     3.2303091e-02 -2.1340605e-03]]]]
+    Values: [ 9.0840356e-03 -1.4033580e-05 -3.9035766e-03 ...  8.1949741e-02
+  2.2977911e-02 -1.2834608e-03]
+    Values: [ 1.1304389e-03 -6.6667229e-07 -7.7187421e-04 ...  2.3881949e-02
+  2.8114528e-03 -2.2409348e-04]
+    Values: [ 6.7365961e-04 -9.7656493e-07 -2.7626799e-04 ...  6.2521193e-03
+  1.5863649e-03 -8.9562433e-05]
+    Values: [[ 1.71898876e-07  4.78976872e-05  5.09849675e-02 ... -5.31381145e-02
+   1.56591568e-06  1.07311180e-07]
+ [ 1.50253698e-11  2.00027489e-06  5.13552186e-06 ...  1.25854085e-05
+   1.21251831e-09  9.18290666e-10]
+ [ 1.62686117e-03  3.45449916e-05  2.60434859e-03 ... -2.56499182e-03
+   6.99944962e-07  4.63164251e-05]
+ ...
+ [ 4.88101132e-03  1.93188537e-03  7.58602321e-01 ... -7.88664699e-01
+   4.30852160e-05  2.83828384e-04]
+ [ 3.79176277e-06  1.78777380e-04  7.47292861e-02 ... -7.69062713e-02
+   2.59309923e-06  2.26303149e-04]
+ [ 1.23896729e-03  1.17032323e-04  7.83115756e-05 ...  1.67960839e-04
+   1.90091350e-06  1.92334428e-05]]
+    Values: [ 3.0575811e-03  3.8343883e-04  1.5324470e-01  2.8126757e-03
+ -5.4122945e-03  1.9776601e-02  1.6601031e-06  6.0612256e-05
+  3.6446203e-04  3.9845673e-04  1.9684683e-04  5.7626981e-03
+  2.1268742e-03  5.3789201e-05  3.2363527e-03  3.6383353e-06
+  2.9817704e-05 -7.6611835e-04  7.8282820e-04  8.6110658e-06
+  7.0803826e-06  2.0822816e-05  4.4097262e-05  7.6337838e-06
+  3.0006806e-04  7.4606105e-05  6.8770605e-05  1.7276321e-03
+  4.5847530e-05  1.5517529e-05  4.2109528e-05  4.6030109e-05
+  4.9867951e-05 -2.9784678e-02 -1.5915559e-01  8.9274272e-06
+  3.5791230e-04]
