@@ -268,14 +268,8 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 client_gradients.append(gradients) # client gradient list
             G_g=aggregate_gradients(client_gradients)
 
-            optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
+            optimizer = tf.keras.optimizers.Adam(1e-4)
             optimizer.apply_gradients(zip(G_g, global_model.trainable_weights))
-            accuracy = tf.metrics.SparseCategoricalAccuracy()
-            for x, y in ds_test:
-                y_pred = global_model(x, training=False)
-                accuracy(y, y_pred)
-
-            print(f"Global Epoch {global_epoch + 1}/{global_epochs}, Test Accuracy: {accuracy.result().numpy()*100:.4f}")
 
 
     return global_model
@@ -298,8 +292,26 @@ if __name__ == '__main__':
     client_datasets, ds_test = port_datasets(dataset_name, input_shape, batch_size)
 
     #train
-    federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
+    global_model=federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                                num_classes=37, timing_info=timing_info)
 
-    print(f"Federated Training Accuracy: {global_accuracy_ft * 100:.2f}%")
-    print(f"Federated Elastic Training Accuracy: {global_accuracy_fet * 100:.2f}%")
+
+
+
+    loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    accuracy = tf.metrics.SparseCategoricalAccuracy()
+    cls_loss = tf.metrics.Mean()
+
+    def test_step(x, y,global_model=global_model):
+        y_pred = global_model(x, training=False)
+        loss = loss_fn_cls(y, y_pred)
+        accuracy(y, y_pred)
+        cls_loss(loss)
+
+
+    for x, y in ds_test:
+        test_step(x, y)
+
+    print('===============================================')
+    print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
+    print('===============================================')
