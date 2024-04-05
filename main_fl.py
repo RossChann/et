@@ -336,6 +336,8 @@ def elastic_training(
     
     return gradients
 
+
+
 def federated_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                        num_classes=37):
 
@@ -399,19 +401,25 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
 
         return aggregated_gradients
       
-    def compute_dw_g(global_model, G_g):
-        old_weights = global_model.get_weights()
-        optimizer = tf.keras.optimizers.SGD(learning_rate=lr)
-        optimizer.apply_gradients(zip(G_g, global_model.trainable_variables))
-        new_weights = global_model.get_weights()
-        dw_g = [new_weight - old_weight for old_weight, new_weight in zip(old_weights, new_weights)]
-        return dw_g
+    def compute_I_g(x, y, G_g):
+        w_0 = [w.value() for w in global_model.trainable_weights]  # record initial weight values
+        optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
+        optimizer.apply_gradients(zip(G_g, global_model.trainable_weights))
+        w_1 = [w.value() for w in global_model.trainable_weights]  # record weight values after applying optimizer
+        dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)]  # compute weight changes
+        '''
+        with tf.GradientTape() as tape:
+            y_pred = model(x, training=True)
+            loss_1 = loss_fn_cls(y, y_pred)
+        grad_1 = tape.gradient(loss_1, model.trainable_weights)
+        '''
+        I = [tf.reduce_sum((G_g_k * dw_0_k)) for (G_g_k, dw_0_k) in zip(G_g, dw_0)]
+        I = tf.convert_to_tensor(I)
+        I = I / tf.reduce_max(tf.abs(I))
+        return I
 
-    def compute_I_g(dw_g, G_g):
-        I_g = [tf.reduce_sum((G_g_k * dw_g_k)) for (G_g_k, dw_g_k) in zip(G_g, dw_g)]
-        I_g = tf.convert_to_tensor(I_g)
-        I_g = I_g / tf.reduce_max(tf.abs(I_g))
-        return I_g
+
+
 #######################
     input_shape = (224,224,3)  # Preset input shape
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
@@ -430,8 +438,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
 
 
         G_g=aggregate_gradients(client_gradients)
-        dw_g=compute_dw_g()
-        I_g=compute_I_g()
+
 
         global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
         test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
@@ -455,7 +462,7 @@ if __name__ == '__main__':
     timing_info = model_name + '_' + str(input_size) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
     
     # port datasets
-    client_datasets, ds_test = port_datasets(dataset_name, input_shape, batch_size)
+    client_datasets, ds_test ,ds_train_full = port_datasets(dataset_name, input_shape, batch_size)
 
     #train 
     federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
