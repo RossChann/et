@@ -61,7 +61,7 @@ def sig_stop_handler(sig, frame):
 ## ENDOF: record mem info ################################################
 
 def port_pretrained_models(
-    model_type=None2,
+    model_type=None,
     input_shape=None,
     num_classes=None,
 ):

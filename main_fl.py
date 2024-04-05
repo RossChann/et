@@ -293,7 +293,7 @@ if __name__ == '__main__':
     timing_info = model_name + '_' + str(input_size) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
 
     # port datasets
-    client_datasets, ds_test ,ds_train_full = port_datasets(dataset_name, input_shape, batch_size)
+    client_datasets, ds_test = port_datasets(dataset_name, input_shape, batch_size)
 
     #train
     federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
