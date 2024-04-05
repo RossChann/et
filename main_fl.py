@@ -279,7 +279,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
         for i,device in enumerate (client_gradients):
             print("device")
             for j,grad in enumerate(device):
-                print(f"gradient{j+1}:{grad}")
+                print(f"gradient{j+1}:{grad.shape}")
 
 
     return global_model
