@@ -226,8 +226,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
 
         for i in range(len(client_gradients[0])):
             grads = [gradients[i] for gradients in client_gradients]
-            squared_sum = tf.reduce_sum(tf.square(grads), axis=0)
-            mean_grad = squared_sum / num_clients
+            mean_grad = tf.reduce_mean(grads, axis=0)
             aggregated_gradients.append(mean_grad)
 
         return aggregated_gradients
