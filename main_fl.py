@@ -268,12 +268,14 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 client_gradients.append(gradients) # client gradient list
             G_g=aggregate_gradients(client_gradients)
 
-        global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
-        test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
-        print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
+            optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
+            optimizer.apply_gradients(zip(G_g, global_model.trainable_weights))
+            accuracy = tf.metrics.SparseCategoricalAccuracy()
+            for x, y in ds_test:
+                y_pred = global_model(x, training=False)
+                accuracy(y, y_pred)
 
-        for i, grad in enumerate(aggregated_gradients):
-            print(f"Aggregated Gradient {i + 1} Shape: {grad.shape}")
+            print(f"Global Epoch {global_epoch + 1}/{global_epochs}, Test Accuracy: {accuracy.result().numpy()*100:.4f}")
 
 
     return global_model
