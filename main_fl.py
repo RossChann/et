@@ -384,28 +384,34 @@ def federated_training(client_datasets, ds_test, model_type='resnet50', global_e
 
 
 def federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
-                               num_classes=37, timing_info='timing_info'):
+                               num_classes=37, timing_info='timing_info',lr=1e-4,weight_decay=5e-4):
 
 #######################
     def aggregate_gradients(client_gradients):
         num_clients = len(client_gradients)
         aggregated_gradients = []
 
-        for gradients in zip(*client_gradients):
-            squared_sum = tf.reduce_sum(tf.square(gradients), axis=0)
-            mean_gradient = squared_sum / num_clients
-            aggregated_gradients.append(mean_gradient)
+        for i in range(len(client_gradients[0])):
+            grads = [gradients[i] for gradients in client_gradients]
+            squared_sum = tf.reduce_sum(tf.square(grads), axis=0)
+            mean_grad = squared_sum / num_clients
+            aggregated_gradients.append(mean_grad)
 
         return aggregated_gradients
       
-    def compute_dw(gradients,global_model):
-        optimizer = tfa.optimizers.SGDW(learning_rate=1e-4, weight_decay=5e-4, momentum=0.9, nesterov=False)
-        w_0=[w.value() for w in global_model.trainable_weights]
-        optimizer.apply_gradients(zip(gradients, global_model.trainable_weights))
-        w_1=[w.value() for w in global_model.trainable_weights]
-        dw=[w_1_k-w_0_k for (w_0_k,w_1_k) in zip(w_0,w_1)]
-        return dw
+    def compute_dw_g(global_model, G_g):
+        old_weights = global_model.get_weights()
+        optimizer = tf.keras.optimizers.SGD(learning_rate=lr)
+        optimizer.apply_gradients(zip(G_g, global_model.trainable_variables))
+        new_weights = global_model.get_weights()
+        dw_g = [new_weight - old_weight for old_weight, new_weight in zip(old_weights, new_weights)]
+        return dw_g
 
+    def compute_I_g(dw_g, G_g):
+        I_g = [tf.reduce_sum((G_g_k * dw_g_k)) for (G_g_k, dw_g_k) in zip(G_g, dw_g)]
+        I_g = tf.convert_to_tensor(I_g)
+        I_g = I_g / tf.reduce_max(tf.abs(I_g))
+        return I_g
 #######################
     input_shape = (224,224,3)  # Preset input shape
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
@@ -422,20 +428,12 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 gradients=elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
                 client_gradients.append(gradients) # client gradient list
 
+
         G_g=aggregate_gradients(client_gradients)
-        
-           
-              
-###############################################
-
-        for i, gradients in enumerate(client_gradients):
-            print(f"client {i + 1}:")
-            for j, grad in enumerate(gradients):
-                tf.print(f"    Values: {grad}")
-
+        dw_g=compute_dw_g()
+        I_g=compute_I_g()
 
         global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
-
         test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
         print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
 
