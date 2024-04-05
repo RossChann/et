@@ -1,4 +1,4 @@
-Round 1:
+client 1:
   Gradient 1: shape=[ 7  7  3 64], dtype=<dtype: 'float32'>
   Gradient 2: shape=[64], dtype=<dtype: 'float32'>
   Gradient 3: shape=[64], dtype=<dtype: 'float32'>
@@ -213,7 +213,7 @@ Round 1:
   Gradient 212: shape=[2048], dtype=<dtype: 'float32'>
   Gradient 213: shape=[2048   10], dtype=<dtype: 'float32'>
   Gradient 214: shape=[10], dtype=<dtype: 'float32'>
-Round 2:
+client 2:
   Gradient 1: shape=[ 7  7  3 64], dtype=<dtype: 'float32'>
   Gradient 2: shape=[64], dtype=<dtype: 'float32'>
   Gradient 3: shape=[64], dtype=<dtype: 'float32'>

@@ -421,7 +421,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                                                   num_classes=num_classes)  # Create model for each client and initailze the weights
                 gradients=elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
                 client_gradients.append(gradients) # client gradient list
-                gradients=[]
+
         G_g=aggregate_gradients(client_gradients)
         
            
@@ -431,7 +431,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
         for i, gradients in enumerate(client_gradients):
             print(f"client {i + 1}:")
             for j, grad in enumerate(gradients):
-                print(f"  Gradient {j + 1}: shape={tf.shape(grad)}, dtype={grad.dtype}")
+                tf.print(f"    Values: {grad}")
 
 
         global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
