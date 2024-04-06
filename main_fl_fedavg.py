@@ -245,11 +245,20 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
     for global_epoch in range(global_epochs):
         print(f"Global Epoch {global_epoch + 1}/{global_epochs}")
         client_weights=[]
-        if global_epoch >= 0:
+        if global_epoch == 0:
             for client_id, ds_train in enumerate(client_datasets):
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
                 client_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                                   num_classes=num_classes)  # Create model for each client and initailze the weights
+
+                elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
+                client_weights.append(client_model.get_weights())
+            aggregated_weights = aggregate_weights(client_weights)
+            update_global_model(global_model, aggregated_weights)
+        else:
+            for client_id, ds_train in enumerate(client_datasets):
+                print(f"Training on client {client_id + 1}/{len(client_datasets)}")
+                client_model.set_weights(global_model.get_weights())
                 elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
                 client_weights.append(client_model.get_weights())
             aggregated_weights = aggregate_weights(client_weights)
