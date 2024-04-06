@@ -327,7 +327,7 @@ def port_datasets(
         ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
             .batch(batch_size * 2) \
             .prefetch(buffer_size=tf.data.AUTOTUNE)
-        
+
     elif dataset_name == 'cifar10-noniid':
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
