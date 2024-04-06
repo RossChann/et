@@ -220,7 +220,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
 
     for global_epoch in range(global_epochs):
         print(f"Global Epoch {global_epoch + 1}/{global_epochs}")
-        if global_epoch ==0:
+        if global_epoch == 0:
             for client_id, ds_train in enumerate(client_datasets):
                 client_gradients = []
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
