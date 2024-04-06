@@ -242,7 +242,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  # Load global model
 
-    for global_epoch in range(1):
+    for global_epoch in range(global_epochs):
         print(f"Global Epoch {global_epoch + 1}/{global_epochs}")
         client_weights=[]
         if global_epoch >= 0:
