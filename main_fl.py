@@ -147,12 +147,13 @@ def elastic_training(
                     if tf.equal(m_k, 1):
                         var_list.append(all_vars[k])
                 train_step_cpl = tf.function(train_step)
-                
+        gradients_list = []
         for x, y in tqdm(ds_train, desc=f'epoch {epoch+1}/{epochs}', ascii=True):
 
             training_step += 1
-
             train_step_cpl(x, y)
+
+
 
             if training_step % 200 == 0:
                 with writer.as_default():
@@ -163,6 +164,7 @@ def elastic_training(
                     cls_loss.reset_states()
                     accuracy.reset_states()
                 clear_cache_and_rec_usage()
+
 
 
         cls_loss.reset_states()
@@ -194,11 +196,6 @@ def elastic_training(
         print("per epoch time(s) including validation:", t2 - t0)
         total_time_1 += (t2 - t0)
 
-    for x,y in ds_test:
-        with tf.GradientTape() as tape:
-            y_pred = model(x, training=True)
-            loss = loss_fn_cls(y, y_pred)
-        gradients = tape.gradient(loss, model.trainable_weights)
 
     best_validation_acc = best_validation_acc.numpy() * 100
     total_time_0 /= 3600
@@ -210,7 +207,7 @@ def elastic_training(
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
     
-    return gradients
+    return
 
 
 
@@ -220,34 +217,20 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                                num_classes=37, timing_info='timing_info',lr=1e-4,weight_decay=5e-4):
 
 #######################
-    def aggregate_gradients(client_gradients):
-        num_clients = len(client_gradients)
-        aggregated_gradients = []
-
-        for i in range(len(client_gradients[0])):
-            grads = [gradients[i] for gradients in client_gradients]
-            mean_grad = tf.reduce_mean(grads, axis=0)
-            aggregated_gradients.append(mean_grad)
-
-        return aggregated_gradients
+    def aggregate_weights(client_weights):
+        avg_weight = [np.mean(np.array(weights), axis=0) for weights in zip(*client_weights)]
+        return avg_weight
 
 
-    def update_global_model(global_model, aggregated_gradients):
-        optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
-        optimizer.apply_gradients(zip(aggregated_gradients, global_model.trainable_weights))
+    def update_global_model(global_model, aggregated_weights):
+        global_model.set_weights(aggregated_weights)
 
-    def compute_I_g(x, y, G_g):
-        w_0 = [w.value() for w in global_model.trainable_weights]  # record initial weight values
+    def compute_I_g(x, y, G_g,global_model):
+        w_0 = [w.value() for w in global_model.trainable_weights]
         optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
         optimizer.apply_gradients(zip(G_g, global_model.trainable_weights))
-        w_1 = [w.value() for w in global_model.trainable_weights]  # record weight values after applying optimizer
-        dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)]  # compute weight changes
-        '''
-        with tf.GradientTape() as tape:
-            y_pred = model(x, training=True)
-            loss_1 = loss_fn_cls(y, y_pred)
-        grad_1 = tape.gradient(loss_1, model.trainable_weights)
-        '''
+        w_1 = [w.value() for w in global_model.trainable_weights]
+        dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)]
         I = [tf.reduce_sum((G_g_k * dw_0_k)) for (G_g_k, dw_0_k) in zip(G_g, dw_0)]
         I = tf.convert_to_tensor(I)
         I = I / tf.reduce_max(tf.abs(I))
@@ -262,20 +245,18 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
 
     for global_epoch in range(global_epochs):
         print(f"Global Epoch {global_epoch + 1}/{global_epochs}")
-        client_gradients=[]
+        client_weights=[]
         if global_epoch == 0:
             for client_id, ds_train in enumerate(client_datasets):
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
                 client_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                                   num_classes=num_classes)  # Create model for each client and initailze the weights
-                gradients=elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
-                client_gradients.append(gradients) # client gradient list
-            G_g=aggregate_gradients(client_gradients)
-            update_global_model(global_model,G_g)
-        else:
-            exit()
-            for client_id, ds_train in enumerate(client_datasets):
                 client_model.set_weights(global_model.get_weights())
+                elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
+                client_weights.append(client_model.get_weights())
+            aggregated_weights = aggregate_weights(client_weights)
+            update_global_model(global_model, aggregated_weights)
+
     return global_model
 
 
@@ -306,7 +287,8 @@ if __name__ == '__main__':
     accuracy = tf.metrics.SparseCategoricalAccuracy()
     cls_loss = tf.metrics.Mean()
 
-    def test_step(x, y,global_model=global_model):
+
+    def test_step(x, y, global_model=global_model):
         y_pred = global_model(x, training=False)
         loss = loss_fn_cls(y, y_pred)
         accuracy(y, y_pred)
