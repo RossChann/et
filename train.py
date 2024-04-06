@@ -8,7 +8,7 @@ import time
 from tqdm import tqdm
 import os
 from utils import clear_cache_and_rec_usage
-from main_fl import I_g
+from main_fl_fedavg import I_g
 
 
 def elastic_training(
