@@ -230,7 +230,12 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
             aggregated_gradients.append(mean_grad)
 
         return aggregated_gradients
-      
+
+
+    def update_global_model(global_model, aggregated_gradients):
+        optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
+        optimizer.apply_gradients(zip(aggregated_gradients, global_model.trainable_weights))
+
     def compute_I_g(x, y, G_g):
         w_0 = [w.value() for w in global_model.trainable_weights]  # record initial weight values
         optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
@@ -266,11 +271,11 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 gradients=elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
                 client_gradients.append(gradients) # client gradient list
             G_g=aggregate_gradients(client_gradients)
-
-            optimizer = tf.keras.optimizers.Adam(1e-4)
-            optimizer.apply_gradients(zip(G_g, global_model.trainable_weights))
-
-
+            update_global_model(global_model,G_g)
+        else:
+            exit()
+            for client_id, ds_train in enumerate(client_datasets):
+                client_model.set_weights(global_model.get_weights())
     return global_model
 
 
