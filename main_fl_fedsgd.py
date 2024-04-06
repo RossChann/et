@@ -224,7 +224,6 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
         return I
 
     #######################
-    input_shape = (224, 224, 3)  # Preset input shape
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  # Load global model
 
@@ -252,6 +251,7 @@ if __name__ == '__main__':
     model_type = 'resnet50'
     model_name = 'resnet50'
     num_classes = 37
+    global_epochs = 4
     batch_size = 4
     input_size = 224
     input_shape = (input_size, input_size, 3)
@@ -261,8 +261,9 @@ if __name__ == '__main__':
     client_datasets, ds_test = port_datasets(dataset_name, input_shape, batch_size)
 
     # train
-    global_model = federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
-                                                       num_classes=37, timing_info=timing_info)
+    global_model = federated_elastic_training_advanced(client_datasets, ds_test, model_type=model_type,
+                                                       global_epochs=global_epochs,
+                                                       num_classes=num_classes, timing_info=timing_info)
 
     loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     accuracy = tf.metrics.SparseCategoricalAccuracy()

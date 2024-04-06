@@ -183,7 +183,7 @@ def port_datasets(
     dataset_name,
     input_shape=28,
     batch_size=4,
-    num_clients=3,
+    num_split=2,
 ):
     """
     This function loads the train and test splits of the requested dataset, and
@@ -212,26 +212,43 @@ def port_datasets(
                                
         
     if dataset_name == 'caltech_birds2011':
-        ds = tfds.load('caltech_birds2011', as_supervised=True) # 200 classes
-        ds_train = ds['train'].map(prep, num_parallel_calls=tf.data.AUTOTUNE)\
-                                 .batch(batch_size)\
-                                 .prefetch(buffer_size=tf.data.AUTOTUNE)
-        ds_test = ds['test'].map(prep, num_parallel_calls=tf.data.AUTOTUNE)\
-                               .batch(batch_size*2)\
-                               .prefetch(buffer_size=tf.data.AUTOTUNE)
+
+        splits = tfds.even_splits('train', n=num_split)
+        client_datasets = []
+
+        for split in splits:
+            ds_train = tfds.load('caltech_birds2011', split=split, as_supervised=True)
+            ds_train = ds_train.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+                .batch(batch_size) \
+                .prefetch(buffer_size=tf.data.AUTOTUNE)
+            client_datasets.append(ds_train)
+
+        ds_test = tfds.load('caltech_birds2011', split='test', as_supervised=True)
+
+        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+            .batch(batch_size * 2) \
+            .prefetch(buffer_size=tf.data.AUTOTUNE)
                                
     elif dataset_name == 'stanford_dogs':
-       ds = tfds.load('stanford_dogs', as_supervised=True) # 120 classes
-       ds_train = ds['train'].map(prep, num_parallel_calls=tf.data.AUTOTUNE)\
-                                .batch(batch_size)\
-                                .prefetch(buffer_size=tf.data.AUTOTUNE)
-       ds_test = ds['test'].map(prep, num_parallel_calls=tf.data.AUTOTUNE)\
-                                .batch(batch_size*2)\
-                                .prefetch(buffer_size=tf.data.AUTOTUNE)
+        splits = tfds.even_splits('train', n=num_split)
+        client_datasets = []
+
+        for split in splits:
+            ds_train = tfds.load('stanford_dogs', split=split, as_supervised=True)
+            ds_train = ds_train.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+                .batch(batch_size) \
+                .prefetch(buffer_size=tf.data.AUTOTUNE)
+            client_datasets.append(ds_train)
+
+        ds_test = tfds.load('stanford_dogs', split='test', as_supervised=True)
+
+        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+            .batch(batch_size * 2) \
+            .prefetch(buffer_size=tf.data.AUTOTUNE)
     
     elif dataset_name == 'oxford_iiit_pet':
         
-        splits= tfds.even_splits('train', n=2)
+        splits= tfds.even_splits('train', n=num_split)
         client_datasets = []
 
         for split in splits:
@@ -258,7 +275,7 @@ def port_datasets(
         x_test = x_test.astype('float32') / 255.0
     
         # 根据标签将训练数据集划分为4个子集
-        client_datasets = [[] for _ in range(2)]
+        client_datasets = [[] for _ in range(num_split)]
         for x, y in zip(x_train, y_train):
           client_id = y // 5
           client_datasets[client_id].append((x, y))
@@ -278,6 +295,38 @@ def port_datasets(
         ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
                      .batch(batch_size * 2) \
                      .prefetch(buffer_size=tf.data.AUTOTUNE)
+
+
+    elif dataset_name == 'cifar10':
+        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+
+        # 数据预处理
+        x_train = x_train.astype('float32') / 255.0  # 归一化像素值
+        x_test = x_test.astype('float32') / 255.0
+
+        # 根据标签将训练数据集划分为4个子集
+        client_datasets = [[] for _ in range(num_split)]
+        for x, y in zip(x_train, y_train):
+            client_id = y[0] // (10 // num_split)  # CIFAR-10有10个类别,平均分成4组
+            client_datasets[client_id].append((x, y[0]))
+
+        # 将每个客户端的数据转换为tf.data.Dataset
+        for i in range(num_split):
+            client_images = [x for x, _ in client_datasets[i]]
+            client_labels = [y for _, y in client_datasets[i]]
+            client_images = np.array(client_images)
+            client_labels = np.array(client_labels)
+            client_datasets[i] = tf.data.Dataset.from_tensor_slices((client_images, client_labels))
+            client_datasets[i] = client_datasets[i].map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+                .batch(batch_size) \
+                .prefetch(buffer_size=tf.data.AUTOTUNE)
+
+        # 创建测试数据集
+        ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+            .batch(batch_size * 2) \
+            .prefetch(buffer_size=tf.data.AUTOTUNE)
+
     else:
         raise NotImplementedError("This dataset has not been implemented yet")
                               
