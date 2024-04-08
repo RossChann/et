@@ -30,12 +30,12 @@ def show_results():
         cls_loss(loss)
 
 
-        for x, y in ds_test:
-            test_step(x, y)
+    for x, y in ds_test:
+        test_step(x, y)
 
-        print('===============================================')
-        print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
-        print('===============================================')
+    print('===============================================')
+    print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
+    print('===============================================')
 
 def elastic_training(
         model,
@@ -212,7 +212,7 @@ def elastic_training(
             with tf.GradientTape() as tape:
                 y_pred = model(x, training=True)
                 loss = loss_fn_cls(y, y_pred)
-            gradients = tape.gradient(loss, model.trainable_weights)
+            gradients = tape.gradient(loss, model.trainable_variables)
         internal_gradients.append(gradients)  # updates in each epoch
 
         for x, y in ds_test:
@@ -281,7 +281,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 averaged_gradients.append(averaged_grads_per_layer)
             optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
             optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_variables))
-
+            global_model.summary()
         else:
             for client_id, ds_train in enumerate(client_datasets):
                 client_gradients = []
@@ -329,4 +329,3 @@ if __name__ == '__main__':
                                                        num_classes=num_classes, timing_info=timing_info)
 
 
-    show_results()
