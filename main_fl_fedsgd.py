@@ -178,7 +178,7 @@ def elastic_training(
         for x, y in tqdm(ds_train, desc=f'epoch {epoch + 1}/{epochs}', ascii=True):
 
             training_step += 1
-            train_step_cpl(x, y)
+            gradients=train_step_cpl(x, y)
 
 
 
@@ -205,16 +205,20 @@ def elastic_training(
         print("per epoch time(s) excluding validation:", t1 - t0)
         total_time_0 += (t1 - t0)
 
+        # 21321313
+        internal_gradients.append(gradients)
+
+
         for x, y in ds_test:
             test_step(x, y)
 
         #record gradients and aggregate them
-        for x,y in ds_train:
+        '''for x,y in ds_train:
             with tf.GradientTape() as tape:
                 y_pred = model(x, training=True)
                 loss = loss_fn_cls(y, y_pred)
             gradients = tape.gradient(loss, model.trainable_weights)
-        internal_gradients.append(gradients)  # updates in each epoch
+        internal_gradients.append(gradients)'''  # updates in each epoch
 
 
 
