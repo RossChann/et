@@ -212,7 +212,7 @@ def elastic_training(
             with tf.GradientTape() as tape:
                 y_pred = model(x, training=True)
                 loss = loss_fn_cls(y, y_pred)
-            gradients = tape.gradient(loss, model.trainable_variables)
+            gradients = tape.gradient(loss, all_vars)
         internal_gradients.append(gradients)  # updates in each epoch
 
         for x, y in ds_test:
@@ -280,31 +280,35 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 averaged_grads_per_layer = tf.math.add_n(grads_per_layer) / len(client_gradients)
                 averaged_gradients.append(averaged_grads_per_layer)
             optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
-            optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_variables))
-            global_model.summary()
+            optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_weights))
+
+            show_results()
+
         else:
             for client_id, ds_train in enumerate(client_datasets):
-                client_gradients = []
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
                 client_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
-                                                     num_classes=num_classes)  # Create model for each client and initailze the weights
-
+                                                      num_classes=num_classes)
                 client_model.set_weights(global_model.get_weights())
-
-
-                final_gradients = elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto',
+                client_gradients = []
+                gradients = elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto',
                                              logdir='auto',
                                              timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5,
                                              interval=5,
-                                             rho=0.533, disable_random_id=True, save_model=False,
-                                             save_txt=False)  # train
-                client_gradients.append(final_gradients)
-            averaged_gradients = []
-            for grads_per_layer in zip(*client_gradients):
-                averaged_grads_per_layer = tf.math.add_n(grads_per_layer) / len(client_gradients)
-                averaged_gradients.append(averaged_grads_per_layer)
-            optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
-            optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_variables))
+                                             rho=0.533, disable_random_id=True, save_model=False, save_txt=False)
+
+                client_gradients.append(gradients)
+                averaged_gradients = []
+                for grads_per_layer in zip(*client_gradients):
+                    averaged_grads_per_layer = tf.math.add_n(grads_per_layer) / len(client_gradients)
+                    averaged_gradients.append(averaged_grads_per_layer)
+                optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
+                optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_weights))
+
+                show_results()
+
+
+
     return global_model
 
 
