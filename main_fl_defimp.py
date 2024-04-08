@@ -18,6 +18,25 @@ global_accuracy_fetc = 0
 I_G=[]
 
 
+def show_results():
+    loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    accuracy = tf.metrics.SparseCategoricalAccuracy()
+    cls_loss = tf.metrics.Mean()
+
+
+    def test_step(x, y, global_model=global_model):
+        y_pred = global_model(x, training=False)
+        loss = loss_fn_cls(y, y_pred)
+        accuracy(y, y_pred)
+        cls_loss(loss)
+
+
+    for x, y in ds_test:
+        test_step(x, y)
+
+    print('===============================================')
+    print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
+    print('===============================================')
 def elastic_training(
         model,
         model_name,
@@ -262,6 +281,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                                                      num_classes=num_classes)  # Create model for each client and initailze the weights
 
                 client_model.set_weights(global_model.get_weights())
+                gradients =
 
                 client_gradients.append(gradients)
             averaged_gradients = []
@@ -295,21 +315,3 @@ if __name__ == '__main__':
                                                        global_epochs=global_epochs,
                                                        num_classes=num_classes, timing_info=timing_info)
 
-    loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    accuracy = tf.metrics.SparseCategoricalAccuracy()
-    cls_loss = tf.metrics.Mean()
-
-
-    def test_step(x, y, global_model=global_model):
-        y_pred = global_model(x, training=False)
-        loss = loss_fn_cls(y, y_pred)
-        accuracy(y, y_pred)
-        cls_loss(loss)
-
-
-    for x, y in ds_test:
-        test_step(x, y)
-
-    print('===============================================')
-    print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
-    print('===============================================')

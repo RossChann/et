@@ -17,6 +17,26 @@ global_accuracy_fet = 0
 global_accuracy_fetc = 0
 
 
+def show_results():
+    loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    accuracy = tf.metrics.SparseCategoricalAccuracy()
+    cls_loss = tf.metrics.Mean()
+
+
+    def test_step(x, y, global_model=global_model):
+        y_pred = global_model(x, training=False)
+        loss = loss_fn_cls(y, y_pred)
+        accuracy(y, y_pred)
+        cls_loss(loss)
+
+
+        for x, y in ds_test:
+            test_step(x, y)
+
+        print('===============================================')
+        print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
+        print('===============================================')
+
 def elastic_training(
         model,
         model_name,
@@ -78,8 +98,8 @@ def elastic_training(
 
     var_list = []
     # initialze a gradient list in FL
-    gradients_list = []
 
+    internal_gradients=[]
     def train_step(x, y):
         with tf.GradientTape() as tape:
             y_pred = model(x, training=True)
@@ -88,6 +108,7 @@ def elastic_training(
         optimizer.apply_gradients(zip(gradients, var_list))
         accuracy(y, y_pred)
         cls_loss(loss)
+        return gradients
 
     @tf.function
     def test_step(x, y):
@@ -118,6 +139,14 @@ def elastic_training(
             w.assign(w_0[k])
         return dw_0, I
 
+    def aggregate(client_gradients):
+        def aggregate_gradients(gradient_list):
+            return tf.math.reduce_mean(gradient_list, axis=0)
+
+        averaged_gradients = tf.nest.map_structure(aggregate_gradients, zip(*client_gradients))
+        return averaged_gradients
+
+
     training_step = 0
     best_validation_acc = 0
 
@@ -144,11 +173,14 @@ def elastic_training(
                     if tf.equal(m_k, 1):
                         var_list.append(all_vars[k])
                 train_step_cpl = tf.function(train_step)
-        gradients_list = []
+
+
         for x, y in tqdm(ds_train, desc=f'epoch {epoch + 1}/{epochs}', ascii=True):
 
             training_step += 1
             train_step_cpl(x, y)
+
+
 
             if training_step % 200 == 0:
                 with writer.as_default():
@@ -160,12 +192,11 @@ def elastic_training(
                     accuracy.reset_states()
                 clear_cache_and_rec_usage()
 
-        #记录客户端梯度
 
-        with tf.GradientTape() as tape:
-            y_pred = model(x, training=True)
-            loss = loss_fn_cls(y, y_pred)
-        gradients = tape.gradient(loss,model.trainable_weights)
+
+
+
+
 
         cls_loss.reset_states()
         accuracy.reset_states()
@@ -176,6 +207,16 @@ def elastic_training(
 
         for x, y in ds_test:
             test_step(x, y)
+
+        #record gradients and aggregate them
+        for x,y in ds_train:
+            with tf.GradientTape() as tape:
+                y_pred = model(x, training=True)
+                loss = loss_fn_cls(y, y_pred)
+            gradients = tape.gradient(loss, model.trainable_weights)
+        internal_gradients.append(gradients)  # updates in each epoch
+
+
 
         with writer.as_default():
             tf.summary.scalar('test/classification_loss', cls_loss.result(), step=training_step)
@@ -206,7 +247,9 @@ def elastic_training(
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
 
-    return gradients
+    final_gradient = aggregate(internal_gradients)
+
+    return final_gradient
 
 
 def federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
@@ -224,6 +267,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
             for client_id, ds_train in enumerate(client_datasets):
                 client_gradients = []
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
+
                 client_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                                       num_classes=num_classes)  # Create model for each client and initailze the weights
                 gradients=elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto',
@@ -236,6 +280,8 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 averaged_gradients.append(averaged_grads_per_layer)
             optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
             optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_variables))
+
+            show_results()
         else:
             for client_id, ds_train in enumerate(client_datasets):
                 client_gradients = []
@@ -246,19 +292,21 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 client_model.set_weights(global_model.get_weights())
 
 
-                gradients = elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto',
+                final_gradients = elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto',
                                              logdir='auto',
                                              timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5,
                                              interval=5,
                                              rho=0.533, disable_random_id=True, save_model=False,
                                              save_txt=False)  # train
-                client_gradients.append(gradients)
+                client_gradients.append(final_gradients)
             averaged_gradients = []
             for grads_per_layer in zip(*client_gradients):
                 averaged_grads_per_layer = tf.math.add_n(grads_per_layer) / len(client_gradients)
                 averaged_gradients.append(averaged_grads_per_layer)
             optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
             optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_variables))
+
+            show_results()
     return global_model
 
 
@@ -282,21 +330,5 @@ if __name__ == '__main__':
                                                        global_epochs=global_epochs,
                                                        num_classes=num_classes, timing_info=timing_info)
 
-    loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    accuracy = tf.metrics.SparseCategoricalAccuracy()
-    cls_loss = tf.metrics.Mean()
 
-
-    def test_step(x, y, global_model=global_model):
-        y_pred = global_model(x, training=False)
-        loss = loss_fn_cls(y, y_pred)
-        accuracy(y, y_pred)
-        cls_loss(loss)
-
-
-    for x, y in ds_test:
-        test_step(x, y)
-
-    print('===============================================')
-    print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
-    print('===============================================')
+    show_results()

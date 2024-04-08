@@ -1,0 +1,18 @@
+I = [
+    tf.reduce_sum(gradient1 * dw_0_1),
+    tf.reduce_sum(gradient2 * dw_0_2),
+    tf.reduce_sum(gradient3 * dw_0_3),
+    ...
+    tf.reduce_sum(gradient214 * dw_0_214)
+]
+
+
+
+Shape of I: (214,)
+
+
+
+
+
+
+
