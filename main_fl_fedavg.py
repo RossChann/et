@@ -292,7 +292,7 @@ def elastic_training_updated(
         cls_loss(loss)
 
     @tf.function
-    def compute_dw(x, y):
+    def compute_dw(x, y,I_G):
         with tf.GradientTape() as tape:
             y_pred_0 = model(x, training=True)
             loss_0 = loss_fn_cls(y, y_pred_0)
@@ -308,10 +308,18 @@ def elastic_training_updated(
         I = [tf.reduce_sum((grad_1_k * dw_0_k)) for (grad_1_k, dw_0_k) in zip(grad_1, dw_0)]
         I = tf.convert_to_tensor(I)
         I = I / tf.reduce_max(tf.abs(I))
+
+        # Extract the importance scores corresponding to var_list from I_G
+        var_indices = [model.trainable_weights.index(v) for v in var_list]
+        I_G_selected = tf.gather(I_G, var_indices)
+
+        # Compute the weighted average of I and I_G_selected
+        alpha = 0.6  # Weight for I_G_selected
+        I_weighted = alpha * I_G_selected + (1 - alpha) * I
         # restore weights
         for k, w in enumerate(model.trainable_weights):
             w.assign(w_0[k])
-        return dw_0, I
+        return dw_0, I_weighted
 
     training_step = 0
     best_validation_acc = 0
@@ -323,9 +331,7 @@ def elastic_training_updated(
         t0 = time.time()
         if epoch % interval == 0:
             for x_probe, y_probe in ds_train.take(1):
-                dw, I = compute_dw(x_probe, y_probe)
-                I_G = tf.slice(I_G, [0], [tf.shape(I)[0]])
-                I=0.4*I+0.6*I_G
+                dw, I = compute_dw(x_probe, y_probe,I_G)
                 I = -I.numpy()
                 I = np.flip(I)
                 # np.savetxt('importance.out', I)
