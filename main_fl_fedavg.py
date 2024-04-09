@@ -412,6 +412,20 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
         global_model.set_weights(aggregated_weights)
 
 
+    def show_results(global_model):
+        loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        accuracy = tf.metrics.SparseCategoricalAccuracy()
+        cls_loss = tf.metrics.Mean()
+
+        for x, y in ds_test:
+            y_pred = global_model(x, training=False)
+            loss = loss_fn_cls(y, y_pred)
+            accuracy(y, y_pred)
+            cls_loss(loss)
+
+        print('===============================================')
+        print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
+        print('===============================================')
 
 
 #######################
@@ -430,14 +444,16 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 client_model=elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
                 client_weights.append(client_model.get_weights())
             aggregated_weights = aggregate_weights(client_weights)
-            w_0=global_model.get_weights
+            w_0=global_model.get_weights()
             update_global_model(global_model, aggregated_weights)
-            w_1=global_model.get_weights
+            w_1=global_model.get_weights()
             dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)]
             dw_squared = [tf.reduce_sum(tf.square(dw)) for dw in dw_0]
             I_G = [dw_sq / lr for dw_sq in dw_squared]
             I_G = tf.convert_to_tensor(I_G)
             I_G = I_G / tf.reduce_max(tf.abs(I_G))
+
+            show_results(global_model)
 
         else:
             for client_id, ds_train in enumerate(client_datasets):
@@ -446,14 +462,16 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 client_model=elastic_training_updated(I_G,client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
                 client_weights.append(client_model.get_weights())
             aggregated_weights = aggregate_weights(client_weights)
-            w_0 = global_model.get_weights
+            w_0 = global_model.get_weights()
             update_global_model(global_model, aggregated_weights)
-            w_1 = global_model.get_weights
+            w_1 = global_model.get_weights()
             dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)]
             dw_squared = [tf.reduce_sum(tf.square(dw)) for dw in dw_0]
             I_G = [dw_sq / lr for dw_sq in dw_squared]
             I_G = tf.convert_to_tensor(I_G)
             I_G = I_G / tf.reduce_max(tf.abs(I_G))
+
+            show_results(global_model)
 
     return global_model
 
