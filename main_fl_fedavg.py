@@ -311,6 +311,7 @@ def elastic_training_updated(
 
         # Extract the importance scores corresponding to var_list from I_G
         var_indices = [model.trainable_weights.index(v) for v in var_list]
+        var_indices = tf.cast(var_indices, tf.int32)
         I_G_selected = tf.gather(I_G, var_indices)
 
         # Compute the weighted average of I and I_G_selected
