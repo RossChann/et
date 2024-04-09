@@ -206,7 +206,7 @@ def elastic_training(
     print('===============================================')
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
-    
+    print(f"Shape of aggregated_weights: {[w.shape for w in aggregated_weights]}")
     return model
 
 
@@ -457,15 +457,6 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
             I_G = I_G / tf.reduce_max(tf.abs(I_G))
 
             show_results(global_model)
-
-            print(f"Shape of aggregated_weights: {[w.shape for w in aggregated_weights]}")
-            print(f"Shape of w_0: {[w.shape for w in w_0]}")
-            print(f"Shape of w_1: {[w.shape for w in w_1]}")
-            print(f"Length of dw_0: {len(dw_0)}")
-            print(f"Shape of dw_0: {[dw.shape for dw in dw_0]}")
-            print(f"Length of dw_squared: {len(dw_squared)}")
-            print(f"Shape of dw_squared: {[dw.shape for dw in dw_squared]}")
-            print(f"Length of I_G: {len(I_G)}")
 
         else:
             for client_id, ds_train in enumerate(client_datasets):
