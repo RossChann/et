@@ -439,6 +439,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
     for global_epoch in range(global_epochs):
         print(f"Global Epoch {global_epoch + 1}/{global_epochs}")
         client_weights=[]
+        compute_client_weights=[]
         if global_epoch == 0:
             for client_id, ds_train in enumerate(client_datasets):
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
@@ -446,12 +447,13 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                                                   num_classes=num_classes)  # Create model for each client and initailze the weights
 
                 client_model=elastic_training(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
-                client_weights.append(K.batch_get_value(client_model.trainable_weights))
-            aggregated_weights = aggregate_weights(client_weights)
-            w_0=global_model.get_weights()
-            update_global_model(global_model, aggregated_weights)
-            w_1=global_model.get_weights()
-            dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)]
+
+                compute_client_weights.append(client_model.get_weights()) #320
+            compute_weights=aggregate_weights(compute_client_weights) #320
+            w_0=K.batch_get_value(client_model.trainable_weights) #320->214
+            update_global_model(global_model, compute_weights) #320->320
+            w_1=K.batch_get_value(client_model.trainable_weights) #320-214
+            dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)] #214
             dw_squared = [tf.reduce_sum(tf.square(dw)) for dw in dw_0]
             I_G = [dw_sq / lr for dw_sq in dw_squared]
             I_G = tf.convert_to_tensor(I_G)
@@ -464,16 +466,18 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
                 client_model.set_weights(global_model.get_weights())
                 client_model=elastic_training_updated(I_G,client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
-                client_weights.append(K.batch_get_value(client_model.trainable_weights))
-            aggregated_weights = aggregate_weights(client_weights)
-            w_0 = global_model.get_weights()
-            update_global_model(global_model, aggregated_weights)
-            w_1 = global_model.get_weights()
-            dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)]
+
+                compute_client_weights.append(client_model.get_weights()) #320
+            compute_weights=aggregate_weights(compute_client_weights) #320
+            w_0=K.batch_get_value(client_model.trainable_weights) #320->214
+            update_global_model(global_model, compute_weights) #320->320
+            w_1=K.batch_get_value(client_model.trainable_weights) #320-214
+            dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)] #214
             dw_squared = [tf.reduce_sum(tf.square(dw)) for dw in dw_0]
             I_G = [dw_sq / lr for dw_sq in dw_squared]
             I_G = tf.convert_to_tensor(I_G)
             I_G = I_G / tf.reduce_max(tf.abs(I_G))
+
 
             show_results(global_model)
 
