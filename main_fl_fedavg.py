@@ -464,7 +464,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
                 client_model.set_weights(global_model.get_weights())
                 client_model=elastic_training_updated(I_G,client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False)# train
-                client_weights.append(client_model.get_weights())
+                client_weights.append(K.batch_get_value(client_model.trainable_weights))
             aggregated_weights = aggregate_weights(client_weights)
             w_0 = global_model.get_weights()
             update_global_model(global_model, aggregated_weights)
