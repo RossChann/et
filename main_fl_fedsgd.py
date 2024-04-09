@@ -151,6 +151,9 @@ def elastic_training(
 
     total_time_0 = 0
     total_time_1 = 0
+
+
+
     for epoch in range(epochs):
 
         t0 = time.time()
@@ -241,7 +244,6 @@ def elastic_training(
     best_validation_acc = best_validation_acc.numpy() * 100
     total_time_0 /= 3600
     print('===============================================')
-    print('Training Type: ElasticTrainer')
     print(f"Accuracy (%): {best_validation_acc:.2f}")
     print(f"Time (h): {total_time_0:.2f}")
     print('===============================================')
@@ -256,7 +258,15 @@ def elastic_training(
 def federated_elastic_training_advanced(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
                                         num_classes=37, timing_info='timing_info', lr=1e-4, weight_decay=5e-4):
     #######################
+    client_data_sizes = [len(tfds.as_numpy(ds_train)) for ds_train in client_datasets]
+    total_data_size = sum(client_data_sizes)
+    decay_steps = total_data_size * global_epochs
 
+    # 设置全局模型的优化器
+    lr_schedule = tf.keras.experimental.CosineDecay(lr, decay_steps=decay_steps)
+    wd_schedule = tf.keras.experimental.CosineDecay(lr * weight_decay, decay_steps=decay_steps)
+    global_optimizer = tfa.optimizers.SGDW(learning_rate=lr_schedule, weight_decay=wd_schedule, momentum=0.9,
+                                           nesterov=False)
 
     #######################
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
@@ -279,8 +289,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
             for grads_per_layer in zip(*client_gradients):
                 averaged_grads_per_layer = tf.math.add_n(grads_per_layer) / len(client_gradients)
                 averaged_gradients.append(averaged_grads_per_layer)
-            optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
-            optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_weights))
+            global_optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_weights))
 
             show_results()
 
@@ -302,8 +311,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
                 for grads_per_layer in zip(*client_gradients):
                     averaged_grads_per_layer = tf.math.add_n(grads_per_layer) / len(client_gradients)
                     averaged_gradients.append(averaged_grads_per_layer)
-                optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4)
-                optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_weights))
+                global_optimizer.apply_gradients(zip(averaged_gradients, global_model.trainable_weights))
 
                 show_results()
 
