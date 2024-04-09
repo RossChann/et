@@ -308,15 +308,10 @@ def elastic_training_updated(
         I = [tf.reduce_sum((grad_1_k * dw_0_k)) for (grad_1_k, dw_0_k) in zip(grad_1, dw_0)]
         I = tf.convert_to_tensor(I)
         I = I / tf.reduce_max(tf.abs(I))
-
-        # Extract the importance scores corresponding to var_list from I_G
-        var_indices = [model.trainable_weights.index(v) for v in var_list]
-        var_indices = tf.cast(var_indices, tf.int32)
-        I_G_selected = tf.gather(I_G, var_indices)
-
+1
         # Compute the weighted average of I and I_G_selected
         alpha = 0.6  # Weight for I_G_selected
-        I_weighted = alpha * I_G_selected + (1 - alpha) * I
+        I_weighted = alpha * I_G + (1 - alpha) * I
         # restore weights
         for k, w in enumerate(model.trainable_weights):
             w.assign(w_0[k])
