@@ -308,7 +308,7 @@ def elastic_training_updated(
         I = [tf.reduce_sum((grad_1_k * dw_0_k)) for (grad_1_k, dw_0_k) in zip(grad_1, dw_0)]
         I = tf.convert_to_tensor(I)
         I = I / tf.reduce_max(tf.abs(I))
-1
+
         # Compute the weighted average of I and I_G_selected
         alpha = 0.6  # Weight for I_G_selected
         I_weighted = alpha * I_G + (1 - alpha) * I
@@ -457,6 +457,15 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
             I_G = I_G / tf.reduce_max(tf.abs(I_G))
 
             show_results(global_model)
+
+            print(f"Shape of aggregated_weights: {[w.shape for w in aggregated_weights]}")
+            print(f"Shape of w_0: {[w.shape for w in w_0]}")
+            print(f"Shape of w_1: {[w.shape for w in w_1]}")
+            print(f"Length of dw_0: {len(dw_0)}")
+            print(f"Shape of dw_0: {[dw.shape for dw in dw_0]}")
+            print(f"Length of dw_squared: {len(dw_squared)}")
+            print(f"Shape of dw_squared: {[dw.shape for dw in dw_squared]}")
+            print(f"Length of I_G: {len(I_G)}")
 
         else:
             for client_id, ds_train in enumerate(client_datasets):
