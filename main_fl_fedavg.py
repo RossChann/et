@@ -324,6 +324,7 @@ def elastic_training_updated(
         if epoch % interval == 0:
             for x_probe, y_probe in ds_train.take(1):
                 dw, I = compute_dw(x_probe, y_probe)
+                I_G = tf.slice(I_G, [0], [tf.shape(I)[0]])
                 I=0.4*I+0.6*I_G
                 I = -I.numpy()
                 I = np.flip(I)
@@ -498,23 +499,3 @@ if __name__ == '__main__':
                                num_classes=num_classes, timing_info=timing_info)
 
 
-
-
-    loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    accuracy = tf.metrics.SparseCategoricalAccuracy()
-    cls_loss = tf.metrics.Mean()
-
-
-    def test_step(x, y, global_model=global_model):
-        y_pred = global_model(x, training=False)
-        loss = loss_fn_cls(y, y_pred)
-        accuracy(y, y_pred)
-        cls_loss(loss)
-
-
-    for x, y in ds_test:
-        test_step(x, y)
-
-    print('===============================================')
-    print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
-    print('===============================================')
