@@ -450,9 +450,9 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
 
                 compute_client_weights.append(client_model.get_weights()) #320
             compute_weights=aggregate_weights(compute_client_weights) #320
-            w_0=K.batch_get_value(client_model.trainable_weights) #320->214
+            w_0=K.batch_get_value(global_model.trainable_weights) #320->214
             update_global_model(global_model, compute_weights) #320->320
-            w_1=K.batch_get_value(client_model.trainable_weights) #320-214
+            w_1=K.batch_get_value(global_model.trainable_weights) #320-214
             dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)] #214
             dw_squared = [tf.reduce_sum(tf.square(dw)) for dw in dw_0]
             I_G = [dw_sq / lr for dw_sq in dw_squared]
@@ -469,9 +469,9 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='re
 
                 compute_client_weights.append(client_model.get_weights()) #320
             compute_weights=aggregate_weights(compute_client_weights) #320
-            w_0=K.batch_get_value(client_model.trainable_weights) #320->214
+            w_0=K.batch_get_value(global_model.trainable_weights) #320->214
             update_global_model(global_model, compute_weights) #320->320
-            w_1=K.batch_get_value(client_model.trainable_weights) #320-214
+            w_1=K.batch_get_value(global_model.trainable_weights) #320-214
             dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)] #214
             dw_squared = [tf.reduce_sum(tf.square(dw)) for dw in dw_0]
             I_G = [dw_sq / lr for dw_sq in dw_squared]
