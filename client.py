@@ -10,8 +10,38 @@ import time
 from tqdm import tqdm
 import os
 from utils import clear_cache_and_rec_usage
+from tensorflow.keras import backend as K
+import keras as keras
+import socket
+import pickle
 
-global_accuracy_ft = 0
+
+import tensorflow as tf
+from utils import port_pretrained_models
+import socket
+import pickle
+
+def receive_weights(host, port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((host, port))
+        s.listen()
+        conn, addr = s.accept()
+        with conn:
+            data = b''
+            while True:
+                packet = conn.recv(4096)
+                if not packet:
+                    break
+                data += packet
+            weights = pickle.loads(data)
+    return weights
+
+def send_weights(weights, host, port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((host, port))
+        data = pickle.dumps(weights)
+        s.sendall(data)
+
 
 def full_training(
         model,
@@ -139,70 +169,34 @@ def full_training(
     # sig_stop_handler(None, None)
 
 
+def federated_elastic_training_client(client_dataset, ds_test, model_type='resnet50',
+                                      num_classes=37, lr=1e-4, weight_decay=5e-4):
+    client_host = '192.168.1.243'
+    client_port = '8001'
+    server_host = '192.168.1.248'
+    server_port = '8000'
 
-
-
-
-def federated_training(client_datasets, ds_test, model_type='resnet50', global_epochs=4,
-                       num_classes=37):
-
-    input_shape = 32
-    global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
-                                          num_classes=num_classes)
-
-    for global_epoch in range(global_epochs):
-        print(f"Global Epoch {global_epoch + 1}/{global_epochs}")
-        client_weights = []
-
-        for client_id, ds_train in enumerate(client_datasets):
-            print(f"Training on client {client_id + 1}/{len(client_datasets)}")
-            client_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
-                                                  num_classes=num_classes)
-            client_model.set_weights(global_model.get_weights())
-
-            full_training(
-                model=client_model,
-                ds_train=ds_train,
-                ds_test=ds_test,
-                run_name='auto',
-                logdir='logs',
-                optim='sgd',
-                lr=1e-4,
-                weight_decay=5e-4,
-                epochs=5,
-                disable_random_id=True,
-                save_model=False,
-                save_txt=False
-            )
-
-            client_weights.append(client_model.get_weights())
-
-        new_weights = np.mean(client_weights, axis=0)
-        global_model.set_weights(new_weights)
-
-        global_model.compile(optimizer='sgd', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                         metrics=['accuracy'])
-        test_loss, test_accuracy = global_model.evaluate(ds_test, verbose=0)
-        print(f"Global test accuracy: {test_accuracy * 100:.2f}%")
-        global global_accuracy_ft
-        global_accuracy_ft = test_accuracy
-
-    return global_model
-
+    while True:
+        print("Training on device 2 (client)")
+        device2_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
+                                               num_classes=num_classes)
+        device2_model.set_weights(receive_weights(client_host, client_port))  # 从服务器接收全局模型权重
+        device2_model = full_training(device2_model, client_dataset, ds_test, run_name='auto', logdir='auto',
+                                      optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=12, disable_random_id=False,
+                                      save_model=False, save_txt=False)
+        send_weights(device2_model.get_weights(), server_host, server_port)  # 发送更新后的权重给服务器
 
 if __name__ == '__main__':
     dataset_name = 'oxford_iiit_pet'
     model_type = 'resnet50'
-    model_name = 'resnet50'
     num_classes = 37
     batch_size = 4
     input_size = 224
     input_shape = (input_size, input_size, 3)
-    timing_info = model_name + '_' + str(input_size) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
 
     # port datasets
-    client_datasets, ds_test, ds_train_full = port_datasets(dataset_name, input_shape, batch_size)
+    client_datasets, ds_test = port_datasets(dataset_name, input_shape, batch_size)
 
-
-
-    print(f"Federated Training Accuracy: {global_accuracy_ft * 100:.2f}%")
+    # train
+    federated_elastic_training_client(client_datasets[1], ds_test, model_type=model_type,
+                                      num_classes=num_classes)
