@@ -234,6 +234,6 @@ if __name__ == '__main__':
     client_datasets, ds_test = port_datasets(dataset_name, input_shape, batch_size)
 
     # train
-    global_model = federated_elastic_training_server(client_datasets, ds_test, model_type=model_type,
+    global_model = federated_elastic_training_server(client_datasets[0], ds_test, model_type=model_type,
                                                      global_epochs=global_epochs,
                                                      num_classes=num_classes, timing_info=timing_info)

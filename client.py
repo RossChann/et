@@ -198,5 +198,5 @@ if __name__ == '__main__':
     client_datasets, ds_test = port_datasets(dataset_name, input_shape, batch_size)
 
     # train
-    federated_elastic_training_client(client_datasets[1], ds_test, model_type=model_type,
+    federated_elastic_training_client(client_datasets[2], ds_test, model_type=model_type,
                                       num_classes=num_classes)
