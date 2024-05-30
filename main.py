@@ -1,16 +1,15 @@
-from utils import (port_datasets, 
-                   port_pretrained_models, 
-                   RepeatTimer, record_once, 
+from utils import (port_datasets,
+                   port_pretrained_models,
+                   RepeatTimer, record_once,
                    sig_stop_handler,
                    my_bool)
-from train import (full_training, 
-                   traditional_tl_training, 
-                   bn_plus_bias_training, 
+from train import (full_training,
+                   traditional_tl_training,
+                   bn_plus_bias_training,
                    elastic_training,
                    elastic_training_weight_magnitude,
                    elastic_training_grad_magnitude,
-                   prune_training,
-                   federated_training)
+                   prune_training)
 import argparse
 import signal
 
@@ -18,20 +17,25 @@ import signal
 # logging.getLogger('tensorflow').setLevel(logging.WARNING)
 
 parser = argparse.ArgumentParser(description='Training a NN model with selected schemes')
-parser.add_argument('--model_name', type=str, default='resnet50', help='valid model names are resnet50, vgg16, mobilenetv2, vit')
-parser.add_argument('--dataset_name', type=str, default='caltech_birds2011', help='valid dataset names are caltech_birds2011, stanford_dogs, oxford_iiit_pet')
+parser.add_argument('--model_name', type=str, default='resnet50',
+                    help='valid model names are resnet50, vgg16, mobilenetv2, vit')
+parser.add_argument('--dataset_name', type=str, default='caltech_birds2011',
+                    help='valid dataset names are caltech_birds2011, stanford_dogs, oxford_iiit_pet')
 parser.add_argument('--train_type', type=str, default='elastic_training', help='valid training schemes are full_training, traditional_tl_training,\
                     bn_plus_bias_training, elastic_training')
-parser.add_argument('--input_size', type=int, default=224, help='input resolution, e.g., 224 stands for 224x224')
+parser.add_argument('--input_size', type=int, default=32, help='input resolution, e.g., 224 stands for 224x224')
 parser.add_argument('--batch_size', type=int, default=4, help='batch size used to run during profiling')
 parser.add_argument('--num_classes', type=int, default=200, help='number of categories model can classify')
-parser.add_argument('--optimizer', type=str, default='sgd', help='valid optimizers are sgd and adam, adam is recommended for vit')
+parser.add_argument('--optimizer', type=str, default='sgd',
+                    help='valid optimizers are sgd and adam, adam is recommended for vit')
 parser.add_argument('--learning_rate', type=float, default=1e-4, help='learning rate')
 parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight decay for sgd')
-parser.add_argument('--num_epochs', type=int, default=5, help='number of training epochs')
-parser.add_argument('--run_name', type=str, default='auto', help='whether to use auto-generated (auto) or user-defined run name')
+parser.add_argument('--num_epochs', type=int, default=12, help='number of training epochs')
+parser.add_argument('--run_name', type=str, default='auto',
+                    help='whether to use auto-generated (auto) or user-defined run name')
 parser.add_argument('--save_model', type=my_bool, default=False, help='whether to save the trained model')
-parser.add_argument('--save_txt', type=my_bool, default=False, help='whether to save the final accuracy and wall time into txt')
+parser.add_argument('--save_txt', type=my_bool, default=False,
+                    help='whether to save the final accuracy and wall time into txt')
 
 parser.add_argument('--interval', type=float, default=4, help='interval (in epoch) of tensor importance evaluation')
 parser.add_argument('--rho', type=float, default=0.533, help='speedup ratio')
@@ -60,7 +64,7 @@ if run_name == 'auto':
     run_name = model_name + '_' + dataset_name + '_' + train_type
 else:
     disable_random_id = True
-    
+
 logdir = 'logs'
 timing_info = model_name + '_' + str(input_size) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
 
@@ -193,7 +197,7 @@ elif train_type == 'elastic_training_grad_magnitude':
         save_model=save_model,
         save_txt=save_txt,
     )
-    
+
 elif train_type == 'prunetrain':
     prune_training(
         model,

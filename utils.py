@@ -183,7 +183,7 @@ def port_datasets(
     dataset_name,
     input_shape=28,
     batch_size=4,
-    num_split=2,
+    num_split=10,
 ):
     """
     This function loads the train and test splits of the requested dataset, and
@@ -228,41 +228,7 @@ def port_datasets(
         ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
             .batch(batch_size * 2) \
             .prefetch(buffer_size=tf.data.AUTOTUNE)
-                               
-    elif dataset_name == 'stanford_dogs':
-        splits = tfds.even_splits('train', n=num_split)
-        client_datasets = []
 
-        for split in splits:
-            ds_train = tfds.load('stanford_dogs', split=split, as_supervised=True)
-            ds_train = ds_train.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-                .batch(batch_size) \
-                .prefetch(buffer_size=tf.data.AUTOTUNE)
-            client_datasets.append(ds_train)
-
-        ds_test = tfds.load('stanford_dogs', split='test', as_supervised=True)
-
-        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-            .batch(batch_size * 2) \
-            .prefetch(buffer_size=tf.data.AUTOTUNE)
-    
-    elif dataset_name == 'oxford_iiit_pet':
-        
-        splits= tfds.even_splits('train', n=num_split)
-        client_datasets = []
-
-        for split in splits:
-            ds_train = tfds.load('oxford_iiit_pet', split=split, as_supervised=True)
-            ds_train = ds_train.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-                                     .batch(batch_size) \
-                                    .prefetch(buffer_size=tf.data.AUTOTUNE)
-            client_datasets.append(ds_train)
-
-        ds_test = tfds.load('oxford_iiit_pet', split='test', as_supervised=True)
-        
-        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-            .batch(batch_size * 2) \
-            .prefetch(buffer_size=tf.data.AUTOTUNE)
     elif dataset_name == 'mnist-noniid':
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
     
@@ -277,10 +243,10 @@ def port_datasets(
         # 根据标签将训练数据集划分为4个子集
         client_datasets = [[] for _ in range(num_split)]
         for x, y in zip(x_train, y_train):
-          client_id = y // 5
+          client_id = y % num_split
           client_datasets[client_id].append((x, y))
         # 将每个客户端的数据转换为tf.data.Dataset
-        for i in range(2):
+        for i in range(num_split):
             client_images = [x for x, _ in client_datasets[i]]
             client_labels = [y for _, y in client_datasets[i]]
             client_images = np.array(client_images)
@@ -296,38 +262,6 @@ def port_datasets(
                      .batch(batch_size * 2) \
                      .prefetch(buffer_size=tf.data.AUTOTUNE)
 
-
-
-    elif dataset_name == 'mnist':
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-
-        # 数据预处理
-        x_train = np.repeat(x_train[..., np.newaxis], 3, axis=-1)  # 复制通道以将灰度图像转换为RGB图像
-        x_test = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
-        x_train = np.pad(x_train, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')  # 填充图像以达到32x32的大小
-        x_test = np.pad(x_test, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')
-        x_train = x_train.astype('float32') / 255.0  # 归一化像素值
-        x_test = x_test.astype('float32') / 255.0
-
-        # 将训练数据集划分为多个子集
-        client_datasets = []
-        split_indices = np.array_split(np.arange(len(x_train)), num_split)
-
-        for indices in split_indices:
-            client_images = x_train[indices]
-            client_labels = y_train[indices]
-            ds_client = tf.data.Dataset.from_tensor_slices((client_images, client_labels))
-            ds_client = ds_client.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-                .batch(batch_size) \
-                .prefetch(buffer_size=tf.data.AUTOTUNE)
-            client_datasets.append(ds_client)
-
-        # 创建测试数据集
-        ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-            .batch(batch_size * 2) \
-            .prefetch(buffer_size=tf.data.AUTOTUNE)
-
     elif dataset_name == 'cifar10-noniid':
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
@@ -338,7 +272,7 @@ def port_datasets(
         # 根据标签将训练数据集划分为4个子集
         client_datasets = [[] for _ in range(num_split)]
         for x, y in zip(x_train, y_train):
-            client_id = y[0] // (10 // num_split)  # CIFAR-10有10个类别,平均分成4组
+            client_id = y[0] // (10 // num_split)  # mnist有10个类别,平均分成4组
             client_datasets[client_id].append((x, y[0]))
 
         # 将每个客户端的数据转换为tf.data.Dataset
@@ -358,31 +292,6 @@ def port_datasets(
             .batch(batch_size * 2) \
             .prefetch(buffer_size=tf.data.AUTOTUNE)
 
-    elif dataset_name == 'cifar10':
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-
-        # 数据预处理
-        x_train = x_train.astype('float32') / 255.0  # 归一化像素值
-        x_test = x_test.astype('float32') / 255.0
-
-        # 将训练数据集划分为多个子集
-        client_datasets = []
-        split_indices = np.array_split(np.arange(len(x_train)), num_split)
-
-        for indices in split_indices:
-            client_images = x_train[indices]
-            client_labels = y_train[indices]
-            ds_client = tf.data.Dataset.from_tensor_slices((client_images, client_labels))
-            ds_client = ds_client.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-                .batch(batch_size) \
-                .prefetch(buffer_size=tf.data.AUTOTUNE)
-            client_datasets.append(ds_client)
-
-        # 创建测试数据集
-        ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-            .batch(batch_size * 2) \
-            .prefetch(buffer_size=tf.data.AUTOTUNE)
 
     else:
         raise NotImplementedError("This dataset has not been implemented yet")

@@ -15,7 +15,7 @@ def selection_DP(t_dy, t_dw, I, rho=0.3):
     
     # Initialize the memo tables of subproblems
     N = t_dw.shape[0] # number of NN layers
-    T = np.sum(t_dw + t_dy) # maximally possible BP time
+    T = 106720  #Orin time
     T_limit = int(rho * T)
     t_dy_cumsum = 0
     for k in range(N):
@@ -89,11 +89,13 @@ def selection_DP(t_dy, t_dw, I, rho=0.3):
     return max_importance, M_sol
 
 def downscale_t_dy_and_t_dw(t_dy, t_dw, Tq=1e3):
-    T = np.sum(t_dw + t_dy)
-    scale = Tq / T
+    # T = np.sum(t_dw + t_dy)
+    # scale = Tq / T
+    scale=1000
     t_dy_q = np.floor(t_dy * scale).astype(np.int16)
     t_dw_q = np.floor(t_dw * scale).astype(np.int16)
-    disco = 1.0 * np.sum(t_dy_q + t_dw_q) / Tq
+    # disco = 1.0 * np.sum(t_dy_q + t_dw_q) / Tq
+    disco=1.0
     return t_dy_q, t_dw_q, disco
 
 def simple_test():
