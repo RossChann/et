@@ -295,7 +295,7 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='vg
 
 if __name__ == '__main__':
 
-    dataset_name = 'mnist-noniid'
+    dataset_name = 'mnist-noniid-dr'
     model_type = 'vgg16'
     model_name = 'vgg16'
     num_classes = 10

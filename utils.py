@@ -205,7 +205,25 @@ def port_datasets(
     # maximize number limit of opened files
     low, high = resource.getrlimit(resource.RLIMIT_NOFILE)
     resource.setrlimit(resource.RLIMIT_NOFILE, (high, high))
-    
+
+    def dirichlet_split_noniid(x_train, y_train, alpha, num_split):
+        n_classes = len(np.unique(y_train))
+        label_distribution = np.random.dirichlet([alpha] * n_classes, size=num_split)
+
+        class_indexes = [[] for _ in range(n_classes)]
+        for i, label in enumerate(y_train):
+            class_indexes[label].append(i)
+
+        client_datasets = [[] for _ in range(num_split)]
+        for client_id, p in enumerate(label_distribution):
+            client_idx = []
+            for c in range(n_classes):
+                num_samples = int(len(class_indexes[c]) * p[c])
+                client_idx += list(np.random.choice(class_indexes[c], num_samples, replace=False))
+            client_datasets[client_id] = [(x_train[i], y_train[i]) for i in client_idx]
+
+        return client_datasets
+
     def prep(x, y):
         x = tf.image.resize(x, [input_shape[0], input_shape[1]])
         return x, y
@@ -262,9 +280,38 @@ def port_datasets(
                      .batch(batch_size * 2) \
                      .prefetch(buffer_size=tf.data.AUTOTUNE)
 
+    elif dataset_name == 'mnist-noniid-dr':
+        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+
+        # 数据预处理
+        x_train = np.repeat(x_train[..., np.newaxis], 3, axis=-1)  # 复制通道以将灰度图像转换为RGB图像
+        x_test = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
+        x_train = np.pad(x_train, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')  # 填充图像以达到32x32的大小
+        x_test = np.pad(x_test, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')
+        x_train = x_train.astype('float32') / 255.0  # 归一化像素值
+        x_test = x_test.astype('float32') / 255.0
+
+
+        alpha = 0.1  # 控制non-iid程度的参数
+        client_datasets = dirichlet_split_noniid(x_train, y_train, alpha, num_split)
+
+
+        for i in range(num_split):
+            client_images = [x for x, _ in client_datasets[i]]
+            client_labels = [y for _, y in client_datasets[i]]
+            client_images = np.array(client_images)
+            client_labels = np.array(client_labels)
+            client_datasets[i] = tf.data.Dataset.from_tensor_slices((client_images, client_labels))
+            client_datasets[i] = client_datasets[i].map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+                .batch(batch_size) \
+                .prefetch(buffer_size=tf.data.AUTOTUNE)
+
+        ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+                    .batch(batch_size * 2) \
+                    .prefetch(buffer_size=tf.data.AUTOTUNE)
     elif dataset_name == 'cifar10-noniid':
         (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-
         # 数据预处理
         x_train = x_train.astype('float32') / 255.0  # 归一化像素值
         x_test = x_test.astype('float32') / 255.0
