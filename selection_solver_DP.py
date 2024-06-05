@@ -12,10 +12,10 @@ def selection_DP(t_dy, t_dw, I, rho=0.3):
         I (np.array float32): per-layer contribution to loss drop [N,]
         rho (float32): backprop timesaving ratio
     """
-    
+
     # Initialize the memo tables of subproblems
-    N = t_dw.shape[0] # number of NN layers
-    T = 106720  #Orin time
+    N = t_dw.shape[0]  # number of NN layers
+    T = np.sum(t_dy+t_dw)  # Orin time
     T_limit = int(rho * T)
     t_dy_cumsum = 0
     for k in range(N):
@@ -30,16 +30,16 @@ def selection_DP(t_dy, t_dw, I, rho=0.3):
     # 2. achieving BP time at most t
     L_memo = np.zeros(shape=(N_limit + 1, T_limit + 1), dtype=np.float32)
     L_memo[0, 0] = 0
-    #L_memo[0, 1:] = MINIMAL_IMPORTANCE
-        
+    # L_memo[0, 1:] = MINIMAL_IMPORTANCE
+
     # M[k, t, :] - solution to subproblem L[k, t]
     M_memo = np.zeros(shape=(N_limit + 1, T_limit + 1, N), dtype=np.uint8)
-    
+
     S_memo = np.zeros(shape=(N_limit + 1, T_limit + 1), dtype=np.uint8)
     S_memo[0, 0] = 1
     S_memo[1:, 0] = 1
     S_memo[0, 1:] = 1
-    
+
     max_importance = MINIMAL_IMPORTANCE
     k_final, t_final = 0, 0
     # Solving all the subproblems recursively
@@ -47,10 +47,10 @@ def selection_DP(t_dy, t_dw, I, rho=0.3):
         for t in range(0, T_limit + 1):
             # Subproblem 1:
             # If layer k-1 is NOT selected
-            # --> no BP time increase 
+            # --> no BP time increase
             # --> no importance increase
             l_skip_curr_layer = L_memo[k - 1, t]
-            
+
             # Subproblem 2:
             # If layer k-1 is selected
             # --> BP time increases dt = t_dw[k - 1] + sum(t_dy[k-2 : n])
@@ -67,7 +67,7 @@ def selection_DP(t_dy, t_dw, I, rho=0.3):
                         opt_k = k_p
                         opt_t = t_p
                         l_max = l_candidate
-                        
+
             # make sure valid solution found by checking integer variable
             if opt_k >= 0:
                 L_memo[k, t] = l_max
@@ -80,23 +80,25 @@ def selection_DP(t_dy, t_dw, I, rho=0.3):
                 M_memo[k, t, :(k - 1)] = M_memo[k - 1, t, :(k - 1)]
                 M_memo[k, t, k - 1] = 0
                 S_memo[k, t] = 0
-            
+
             if l_max > max_importance:
                 max_importance = L_memo[k, t]
                 k_final, t_final = k, t
-    
+
     M_sol = M_memo[k_final, t_final, :]
     return max_importance, M_sol
 
+
 def downscale_t_dy_and_t_dw(t_dy, t_dw, Tq=1e3):
-    # T = np.sum(t_dw + t_dy)
-    # scale = Tq / T
-    scale=1000
+    T = np.sum(t_dw + t_dy)
+    scale = Tq / T
+    #scale = 1000
     t_dy_q = np.floor(t_dy * scale).astype(np.int16)
     t_dw_q = np.floor(t_dw * scale).astype(np.int16)
-    # disco = 1.0 * np.sum(t_dy_q + t_dw_q) / Tq
-    disco=1.0
+    disco = 1.0 * np.sum(t_dy_q + t_dw_q) / Tq
+    print(disco)
     return t_dy_q, t_dw_q, disco
+
 
 def simple_test():
     t_dy = np.array([0, 2, 1, 4, 0])
@@ -105,6 +107,7 @@ def simple_test():
     max_importance, M_sol = selection_DP(t_dy, t_dw, I, rho=0.6)
     print(max_importance)
     print(M_sol)
+
 
 def main():
     I = np.loadtxt('importance.out')
@@ -118,13 +121,14 @@ def main():
     t_dw_q = np.flip(t_dw_q)
     I = np.flip(I)
     t1 = time.time()
-    max_importance, M_sol = selection_DP(t_dy_q, t_dw_q, I, rho=0.3*disco)
+    max_importance, M_sol = selection_DP(t_dy_q, t_dw_q, I, rho=0.3 * disco)
     t2 = time.time()
-    print("t:", t2-t1)
+    print("t:", t2 - t1)
     M_sol = np.flip(M_sol)
     print('max_I:', max_importance)
     print('m:', M_sol)
     print('%T_sel:', 100 * np.sum(np.maximum.accumulate(M_sol) * t_dy + M_sol * t_dw) / np.sum(t_dy + t_dw))
+
 
 if __name__ == '__main__':
     main()

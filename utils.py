@@ -7,7 +7,7 @@ import resource
 import gc
 from subprocess import Popen, PIPE
 from threading import Timer
-import sys
+import random
 import os
 import numpy as np
 
@@ -206,135 +206,96 @@ def port_datasets(
     low, high = resource.getrlimit(resource.RLIMIT_NOFILE)
     resource.setrlimit(resource.RLIMIT_NOFILE, (high, high))
 
-    def dirichlet_split_noniid(x_train, y_train, alpha, num_split):
-        n_classes = len(np.unique(y_train))
-        label_distribution = np.random.dirichlet([alpha] * n_classes, size=num_split)
-
-        class_indexes = [[] for _ in range(n_classes)]
-        for i, label in enumerate(y_train):
-            class_indexes[label].append(i)
-
-        client_datasets = [[] for _ in range(num_split)]
-        for client_id, p in enumerate(label_distribution):
-            client_idx = []
-            for c in range(n_classes):
-                num_samples = int(len(class_indexes[c]) * p[c])
-                client_idx += list(np.random.choice(class_indexes[c], num_samples, replace=False))
-            client_datasets[client_id] = [(x_train[i], y_train[i]) for i in client_idx]
-
-        return client_datasets
 
     def prep(x, y):
         x = tf.image.resize(x, [input_shape[0], input_shape[1]])
+        x = tf.image.grayscale_to_rgb(x)
+        # only for minst using
         return x, y
+
                                
         
-    if dataset_name == 'caltech_birds2011':
+    if dataset_name == 'oxford_iiit_pet': #num_class=37   input_shape=224
 
         splits = tfds.even_splits('train', n=num_split)
         client_datasets = []
 
         for split in splits:
-            ds_train = tfds.load('caltech_birds2011', split=split, as_supervised=True)
+            ds_train = tfds.load('oxford_iiit_pet', split=split, as_supervised=True)
             ds_train = ds_train.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
                 .batch(batch_size) \
                 .prefetch(buffer_size=tf.data.AUTOTUNE)
             client_datasets.append(ds_train)
 
-        ds_test = tfds.load('caltech_birds2011', split='test', as_supervised=True)
+        ds_test = tfds.load('oxford_iiit_pet', split='test', as_supervised=True)
 
         ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
             .batch(batch_size * 2) \
             .prefetch(buffer_size=tf.data.AUTOTUNE)
 
-    elif dataset_name == 'mnist-noniid':
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-    
-    # 数据预处理
-        x_train = np.repeat(x_train[..., np.newaxis], 3, axis=-1)  # 复制通道以将灰度图像转换为RGB图像
-        x_test = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
-        x_train = np.pad(x_train, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')  # 填充图像以达到32x32的大小
-        x_test = np.pad(x_test, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')
-        x_train = x_train.astype('float32') / 255.0  # 归一化像素值
-        x_test = x_test.astype('float32') / 255.0
-    
-        # 根据标签将训练数据集划分为4个子集
-        client_datasets = [[] for _ in range(num_split)]
-        for x, y in zip(x_train, y_train):
-          client_id = y % num_split
-          client_datasets[client_id].append((x, y))
-        # 将每个客户端的数据转换为tf.data.Dataset
-        for i in range(num_split):
-            client_images = [x for x, _ in client_datasets[i]]
-            client_labels = [y for _, y in client_datasets[i]]
-            client_images = np.array(client_images)
-            client_labels = np.array(client_labels)
-            client_datasets[i] = tf.data.Dataset.from_tensor_slices((client_images, client_labels))
-            client_datasets[i] = client_datasets[i].map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-                                                .batch(batch_size) \
-                                                .prefetch(buffer_size=tf.data.AUTOTUNE)
-    
-    # 创建测试数据集
-        ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-                     .batch(batch_size * 2) \
-                     .prefetch(buffer_size=tf.data.AUTOTUNE)
 
-    elif dataset_name == 'mnist-noniid-dr':
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-
-        # 数据预处理
-        x_train = np.repeat(x_train[..., np.newaxis], 3, axis=-1)  # 复制通道以将灰度图像转换为RGB图像
-        x_test = np.repeat(x_test[..., np.newaxis], 3, axis=-1)
-        x_train = np.pad(x_train, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')  # 填充图像以达到32x32的大小
-        x_test = np.pad(x_test, ((0, 0), (2, 2), (2, 2), (0, 0)), mode='constant')
-        x_train = x_train.astype('float32') / 255.0  # 归一化像素值
-        x_test = x_test.astype('float32') / 255.0
-
-
-        alpha = 0.1  # 控制non-iid程度的参数
-        client_datasets = dirichlet_split_noniid(x_train, y_train, alpha, num_split)
-
-
-        for i in range(num_split):
-            client_images = [x for x, _ in client_datasets[i]]
-            client_labels = [y for _, y in client_datasets[i]]
-            client_images = np.array(client_images)
-            client_labels = np.array(client_labels)
-            client_datasets[i] = tf.data.Dataset.from_tensor_slices((client_images, client_labels))
-            client_datasets[i] = client_datasets[i].map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+    elif dataset_name == 'cifar10-iid':
+        splits = tfds.even_splits('train', n=num_split)
+        client_datasets = []
+        for split in splits:
+            ds_train = tfds.load('cifar10', split=split, as_supervised=True)
+            ds_train = ds_train.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
                 .batch(batch_size) \
                 .prefetch(buffer_size=tf.data.AUTOTUNE)
-
-        ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+            client_datasets.append(ds_train)
+        ds_test = tfds.load('cifar10', split='test', as_supervised=True)
         ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
-                    .batch(batch_size * 2) \
-                    .prefetch(buffer_size=tf.data.AUTOTUNE)
-    elif dataset_name == 'cifar10-noniid':
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-        # 数据预处理
-        x_train = x_train.astype('float32') / 255.0  # 归一化像素值
-        x_test = x_test.astype('float32') / 255.0
+            .batch(batch_size * 2) \
+            .prefetch(buffer_size=tf.data.AUTOTUNE)
 
-        # 根据标签将训练数据集划分为4个子集
-        client_datasets = [[] for _ in range(num_split)]
-        for x, y in zip(x_train, y_train):
-            client_id = y[0] // (10 // num_split)  # mnist有10个类别,平均分成4组
-            client_datasets[client_id].append((x, y[0]))
-
-        # 将每个客户端的数据转换为tf.data.Dataset
-        for i in range(num_split):
-            client_images = [x for x, _ in client_datasets[i]]
-            client_labels = [y for _, y in client_datasets[i]]
-            client_images = np.array(client_images)
-            client_labels = np.array(client_labels)
-            client_datasets[i] = tf.data.Dataset.from_tensor_slices((client_images, client_labels))
-            client_datasets[i] = client_datasets[i].map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+    elif dataset_name == 'mnist-iid':
+        splits = tfds.even_splits('train', n=num_split)
+        client_datasets = []
+        for split in splits:
+            ds_train = tfds.load('mnist', split=split, as_supervised=True)
+            ds_train = ds_train.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
                 .batch(batch_size) \
                 .prefetch(buffer_size=tf.data.AUTOTUNE)
+            client_datasets.append(ds_train)
+        ds_test = tfds.load('mnist', split='test', as_supervised=True)
+        ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
+            .batch(batch_size * 2) \
+            .prefetch(buffer_size=tf.data.AUTOTUNE)
 
-        # 创建测试数据集
-        ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+    elif dataset_name == 'mnist-dirichlet':
+        # 设置 Dirichlet 分布的参数
+        alpha = 0.5  # 控制 non-iid 程度，alpha 越小，non-iid 程度越高
+
+        # 加载完整的 MNIST 训练集
+        ds_train = tfds.load('mnist', split='train', as_supervised=True)
+        ds_train = ds_train.map(prep, num_parallel_calls=tf.data.AUTOTUNE)
+
+        # 将数据按标签分组
+        label_datasets = {}
+        for image, label in ds_train:
+            if label.numpy() not in label_datasets:
+                label_datasets[label.numpy()] = []
+            label_datasets[label.numpy()].append((image, label))
+
+        # 根据 Dirichlet 分布生成每个客户端的标签分布
+        label_proportions = np.random.dirichlet([alpha] * 10, size=num_split)
+
+        # 根据标签分布为每个客户端分配数据
+        client_datasets = []
+        for proportions in label_proportions:
+            client_data = []
+            for label, proportion in enumerate(proportions):
+                num_samples = int(proportion * len(label_datasets[label]))
+                client_data.extend(label_datasets[label][:num_samples])
+            random.shuffle(client_data)
+            ds_client = tf.data.Dataset.from_generator(
+                lambda: client_data, output_types=(tf.float32, tf.int64)
+            )
+            ds_client = ds_client.batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
+            client_datasets.append(ds_client)
+
+        # 加载测试集
+        ds_test = tfds.load('mnist', split='test', as_supervised=True)
         ds_test = ds_test.map(prep, num_parallel_calls=tf.data.AUTOTUNE) \
             .batch(batch_size * 2) \
             .prefetch(buffer_size=tf.data.AUTOTUNE)

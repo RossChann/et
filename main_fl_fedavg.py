@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
-from utils import port_datasets 
-from utils import port_pretrained_models 
+from utils import port_datasets
+from utils import port_pretrained_models
 from selection_solver_DP import selection_DP, downscale_t_dy_and_t_dw
 from profiler import profile_parser
 import tensorflow_datasets as tfds
@@ -14,40 +14,36 @@ from tensorflow.keras import backend as K
 from train import elastic_training
 import keras as keras
 
-
 global_accuracy_ft = 0
 global_accuracy_fet = 0
 global_accuracy_fetc = 0
 
 
-
-
-
 def elastic_training_pcandorin(
-    model,
-    model_name,
-    ds_train,
-    ds_test,
-    run_name,
-    logdir,
-    timing_info,
-    optim='sgd',
-    lr=1e-4,
-    weight_decay=5e-4,
-    epochs=5,
-    interval=5,
-    rho=0.533,
-    disable_random_id=False,
-    save_model=False,
-    save_txt=False,
-    id=0,
+        model,
+        model_name,
+        ds_train,
+        ds_test,
+        run_name,
+        logdir,
+        timing_info,
+        optim='sgd',
+        lr=1e-4,
+        weight_decay=5e-4,
+        epochs=5,
+        interval=5,
+        rho=0.533,
+        disable_random_id=False,
+        save_model=False,
+        save_txt=False,
+        id=0,
 ):
     """Train with ElasticTrainer"""
-    
-    def rho_for_backward_pass(rho):
-        return (rho - 1/3)*3/2
 
-    if id<=4:
+    def rho_for_backward_pass(rho):
+        return (rho - 1 / 3) * 3 / 2
+
+    if id <= 4:
         t_dw, t_dy = profile_parser(
             model,
             model_name,
@@ -55,7 +51,7 @@ def elastic_training_pcandorin(
             'profile_extracted/pc/' + timing_info,
             draw_figure=False,
         )
-        rho=1.533
+        rho = 1.533
     else:
         t_dw, t_dy = profile_parser(
             model,
@@ -64,29 +60,33 @@ def elastic_training_pcandorin(
             'profile_extracted/orin/' + timing_info,
             draw_figure=False,
         )
-        rho=0.533
-    #np.savetxt('t_dy.out', t_dy)
-    #np.savetxt('t_dw.out', t_dw)
+        rho = 0.533
+
+    # np.savetxt('t_dy.out', t_dy)
+    # np.savetxt('t_dw.out', t_dw)
     t_dy_q, t_dw_q, disco = downscale_t_dy_and_t_dw(t_dy, t_dw, Tq=1e3)
     t_dy_q = np.flip(t_dy_q)
     t_dw_q = np.flip(t_dw_q)
 
     if optim == 'sgd':
-        decay_steps = len(tfds.as_numpy(ds_train)) * epochs
-        
+        #decay_steps = len(tfds.as_numpy(ds_train)) * epochs
+        train_size = sum(1 for _ in ds_train)
+        decay_steps = train_size * epochs
+
         lr_schedule = tf.keras.experimental.CosineDecay(lr, decay_steps=decay_steps)
         wd_schedule = tf.keras.experimental.CosineDecay(lr * weight_decay, decay_steps=decay_steps)
-        optimizer = tfa.optimizers.SGDW(learning_rate=lr_schedule, weight_decay=wd_schedule, momentum=0.9, nesterov=False)
+        optimizer = tfa.optimizers.SGDW(learning_rate=lr_schedule, weight_decay=wd_schedule, momentum=0.9,
+                                        nesterov=False)
     else:
         optimizer = tf.keras.optimizers.Adam(lr)
-    
+
     loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    
+
     if disable_random_id:
         runid = run_name
     else:
         runid = run_name + '_elastic_x' + str(np.random.randint(10000))
-    
+
     writer = tf.summary.create_file_writer(logdir + '/' + runid)
     accuracy = tf.metrics.SparseCategoricalAccuracy()
     cls_loss = tf.metrics.Mean()
@@ -96,6 +96,7 @@ def elastic_training_pcandorin(
     var_list = []
     # initialze a gradient list in FL
     gradients_list = []
+
     def train_step(x, y):
         with tf.GradientTape() as tape:
             y_pred = model(x, training=True)
@@ -112,17 +113,16 @@ def elastic_training_pcandorin(
         accuracy(y, y_pred)
         cls_loss(loss)
 
-
     @tf.function
     def compute_dw(x, y):
         with tf.GradientTape() as tape:
             y_pred_0 = model(x, training=True)
             loss_0 = loss_fn_cls(y, y_pred_0)
         grad_0 = tape.gradient(loss_0, model.trainable_weights)
-        w_0 = [w.value() for w in model.trainable_weights] # record initial weight values
+        w_0 = [w.value() for w in model.trainable_weights]  # record initial weight values
         optimizer.apply_gradients(zip(grad_0, model.trainable_weights))
-        w_1 = [w.value() for w in model.trainable_weights] # record weight values after applying optimizer
-        dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)] # compute weight changes
+        w_1 = [w.value() for w in model.trainable_weights]  # record weight values after applying optimizer
+        dw_0 = [w_1_k - w_0_k for (w_0_k, w_1_k) in zip(w_0, w_1)]  # compute weight changes
         with tf.GradientTape() as tape:
             y_pred_1 = model(x, training=True)
             loss_1 = loss_fn_cls(y, y_pred_1)
@@ -137,9 +137,10 @@ def elastic_training_pcandorin(
 
     training_step = 0
     best_validation_acc = 0
-    
+
     total_time_0 = 0
     total_time_1 = 0
+    print("============starting training")
     for epoch in range(epochs):
 
         t0 = time.time()
@@ -148,9 +149,11 @@ def elastic_training_pcandorin(
                 dw, I = compute_dw(x_probe, y_probe)
                 I = -I.numpy()
                 I = np.flip(I)
-                #np.savetxt('importance.out', I)
+                # np.savetxt('importance.out', I)
                 rho_b = rho_for_backward_pass(rho)
-                max_importance, m = selection_DP(t_dy_q, t_dw_q, I, rho=rho_b*disco)
+                print("======rho_b ccccc")
+                max_importance, m = selection_DP(t_dy_q, t_dw_q, I, rho=rho_b * disco)
+                print("=======max_importance calculated")
                 m = np.flip(m)
                 print("m:", m)
                 print("max importance:", max_importance)
@@ -161,13 +164,11 @@ def elastic_training_pcandorin(
                     if tf.equal(m_k, 1):
                         var_list.append(all_vars[k])
                 train_step_cpl = tf.function(train_step)
-        gradients_list = []
-        for x, y in tqdm(ds_train, desc=f'epoch {epoch+1}/{epochs}', ascii=True):
+        print("======selection completed")
+        for x, y in tqdm(ds_train, desc=f'epoch {epoch + 1}/{epochs}', ascii=True):
 
             training_step += 1
             train_step_cpl(x, y)
-
-
 
             if training_step % 200 == 0:
                 with writer.as_default():
@@ -178,8 +179,6 @@ def elastic_training_pcandorin(
                     cls_loss.reset_states()
                     accuracy.reset_states()
                 clear_cache_and_rec_usage()
-
-
 
         cls_loss.reset_states()
         accuracy.reset_states()
@@ -210,7 +209,6 @@ def elastic_training_pcandorin(
         print("per epoch time(s) including validation:", t2 - t0)
         total_time_1 += (t2 - t0)
 
-
     best_validation_acc = best_validation_acc.numpy() * 100
     total_time_0 /= 3600
     print('===============================================')
@@ -223,18 +221,16 @@ def elastic_training_pcandorin(
 
     return model
 
-def federated_elastic_training_advanced(client_datasets, ds_test, model_type='vgg16', global_epochs=20,
-                               num_classes=10, timing_info='timing_info',lr=1e-4,weight_decay=5e-4):
 
-#######################
+def federated_elastic_training_advanced(client_datasets, ds_test, model_type='vgg16', global_epochs=20,
+                                        num_classes=10, timing_info='timing_info', lr=1e-4, weight_decay=5e-4):
+    #######################
     def aggregate_weights(client_weights):
         avg_weight = [np.mean(np.array(weights), axis=0) for weights in zip(*client_weights)]
         return avg_weight
 
-
     def update_global_model(global_model, aggregated_weights):
         global_model.set_weights(aggregated_weights)
-
 
     def show_results(global_model):
         loss_fn_cls = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -251,65 +247,69 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='vg
         print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
         print('===============================================')
 
-
-#######################
+    #######################
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  # Load global model
 
     for global_epoch in range(global_epochs):
         print(f"Global Epoch {global_epoch + 1}/{global_epochs}")
-        compute_client_weights=[]
+        compute_client_weights = []
         if global_epoch == 0:
             for client_id, ds_train in enumerate(client_datasets):
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
                 client_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
-                                                  num_classes=10)  # Create model for each client and initailze the weights
+                                                      num_classes=10)  # Create model for each client and initailze the weights
 
-                client_model=elastic_training_pcandorin(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False, id=client_id)# train
+                client_model = elastic_training_pcandorin(client_model, model_name, ds_train, ds_test, run_name='auto',
+                                                          logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4,
+                                                          weight_decay=5e-4, epochs=5, interval=5, rho=0.533,
+                                                          disable_random_id=True, save_model=False, save_txt=False,
+                                                          id=client_id)  # train
 
-                compute_client_weights.append(client_model.get_weights()) #320
-            compute_weights=aggregate_weights(compute_client_weights) #320
-            w_0=K.batch_get_value(global_model.trainable_weights) #320->214
-            update_global_model(global_model, compute_weights) #320->320
-            w_1=K.batch_get_value(global_model.trainable_weights) #320-214
+                compute_client_weights.append(client_model.get_weights())  # 320
+            compute_weights = aggregate_weights(compute_client_weights)  # 320
+            w_0 = K.batch_get_value(global_model.trainable_weights)  # 320->214
+            update_global_model(global_model, compute_weights)  # 320->320
+            w_1 = K.batch_get_value(global_model.trainable_weights)  # 320-214
             show_results(global_model)
 
         else:
             for client_id, ds_train in enumerate(client_datasets):
                 print(f"Training on client {client_id + 1}/{len(client_datasets)}")
                 client_model.set_weights(global_model.get_weights())
-                client_model=elastic_training_pcandorin(client_model, model_name, ds_train, ds_test, run_name='auto', logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4, weight_decay=5e-4, epochs=5, interval=5, rho=0.533, disable_random_id=True, save_model=False, save_txt=False, id=client_id)# train
+                client_model = elastic_training_pcandorin(client_model, model_name, ds_train, ds_test, run_name='auto',
+                                                          logdir='auto', timing_info=timing_info, optim='sgd', lr=1e-4,
+                                                          weight_decay=5e-4, epochs=5, interval=5, rho=0.533,
+                                                          disable_random_id=True, save_model=False, save_txt=False,
+                                                          id=client_id)  # train
 
-                compute_client_weights.append(client_model.get_weights()) #320
-            compute_weights=aggregate_weights(compute_client_weights) #320
-            w_0=K.batch_get_value(global_model.trainable_weights) #320->214
-            update_global_model(global_model, compute_weights) #320->320
-            w_1=K.batch_get_value(global_model.trainable_weights) #320-214
+                compute_client_weights.append(client_model.get_weights())  # 320
+            compute_weights = aggregate_weights(compute_client_weights)  # 320
+            w_0 = K.batch_get_value(global_model.trainable_weights)  # 320->214
+            update_global_model(global_model, compute_weights)  # 320->320
+            w_1 = K.batch_get_value(global_model.trainable_weights)  # 320-214
 
             show_results(global_model)
 
     return global_model
 
 
-
-
 if __name__ == '__main__':
-
-    dataset_name = 'mnist-noniid-dr'
-    model_type = 'vgg16'
-    model_name = 'vgg16'
+    dataset_name = 'mnist-dirichlet'
+    model_type = 'resnet50'
+    model_name = 'resnet50'
     num_classes = 10
-    global_epochs=20
+    global_epochs = 20
     batch_size = 4
     input_size = 32
-    input_shape = (input_size,input_size,3)
+    input_shape = (input_size, input_size, 3)
     timing_info = model_name + '_' + str(input_size) + '_' + str(num_classes) + '_' + str(batch_size) + '_' + 'profile'
 
     # port datasets
     client_datasets, ds_test = port_datasets(dataset_name, input_shape, batch_size)
 
-    #train
-    global_model=federated_elastic_training_advanced(client_datasets, ds_test, model_type=model_type, global_epochs=global_epochs,
-                               num_classes=num_classes, timing_info=timing_info)
-
+    # train
+    global_model = federated_elastic_training_advanced(client_datasets, ds_test, model_type=model_type,
+                                                       global_epochs=global_epochs,
+                                                       num_classes=num_classes, timing_info=timing_info)
 
