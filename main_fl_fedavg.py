@@ -247,6 +247,8 @@ def federated_elastic_training_advanced(client_datasets, ds_test, model_type='vg
         print(f"Global Model Accuracy (%): {accuracy.result().numpy() * 100:.2f}")
         print('===============================================')
 
+        with open('global_accuracy.txt', 'a') as file:
+            file.write(f"{accuracy.result().numpy() * 100:.2f}%\n")
     #######################
     global_model = port_pretrained_models(model_type=model_type, input_shape=input_shape,
                                           num_classes=num_classes)  # Load global model
