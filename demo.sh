@@ -1,1 +1,0 @@
-"/Users/ross/Library/Application Support/CrossOver/Bottles/wave/drive_c/harmonic_v0.0.1/harmonic_loader.exe" "/Users/ross/Library/Application Support/CrossOver/Bottles/wave/drive_c/Wuthering Waves/Wuthering Waves Game/Client/Binaries/Win64/Client-Win64-Shipping.exe" "/Users/ross/Library/Application Support/CrossOver/Bottles/wave/drive_c/harmonic_v0.0.2/dump_cn.dat"
