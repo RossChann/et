@@ -26,6 +26,8 @@ def full_training(
 ):
     """All NN weights will be trained"""
 
+
+
     if optim == 'sgd':
         decay_steps = len(tfds.as_numpy(ds_train)) * epochs
 
@@ -135,6 +137,7 @@ def full_training(
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
     # sig_stop_handler(None, None)
 
+    return model
 
 def bn_plus_bias_training(
         model,
@@ -407,7 +410,7 @@ def traditional_tl_training(
     # sig_stop_handler(None, None)
 
 
-def elastic_training(
+def elastic_training_pcandorin(
         model,
         model_name,
         ds_train,
@@ -418,25 +421,35 @@ def elastic_training(
         optim='sgd',
         lr=1e-4,
         weight_decay=5e-4,
-        epochs=12,
-        interval=4,
+        epochs=5,
+        interval=5,
         rho=0.533,
         disable_random_id=False,
         save_model=False,
         save_txt=False,
+        id=0,
 ):
     """Train with ElasticTrainer"""
 
-    def rho_for_backward_pass(rho):
-        return (rho - 1 / 3) * 3 / 2
+    if id <= 4:
+        t_dw, t_dy = profile_parser(
+            model,
+            model_name,
+            5,
+            'profile_extracted/pc/' + timing_info,
+            draw_figure=False,
+        )
+        rho_b = 3
+    else:
+        t_dw, t_dy = profile_parser(
+            model,
+            model_name,
+            5,
+            'profile_extracted/orin/' + timing_info,
+            draw_figure=False,
+        )
+        rho_b = 0.3
 
-    t_dw, t_dy = profile_parser(
-        model,
-        model_name,
-        5,
-        'profile_extracted/' + timing_info,
-        draw_figure=False,
-    )
     # np.savetxt('t_dy.out', t_dy)
     # np.savetxt('t_dw.out', t_dw)
     t_dy_q, t_dw_q, disco = downscale_t_dy_and_t_dw(t_dy, t_dw, Tq=1e3)
@@ -444,7 +457,9 @@ def elastic_training(
     t_dw_q = np.flip(t_dw_q)
 
     if optim == 'sgd':
-        decay_steps = len(tfds.as_numpy(ds_train)) * epochs
+        #decay_steps = len(tfds.as_numpy(ds_train)) * epochs
+        train_size = sum(1 for _ in ds_train)
+        decay_steps = train_size * epochs
 
         lr_schedule = tf.keras.experimental.CosineDecay(lr, decay_steps=decay_steps)
         wd_schedule = tf.keras.experimental.CosineDecay(lr * weight_decay, decay_steps=decay_steps)
@@ -467,6 +482,8 @@ def elastic_training(
     print(f"RUNID: {runid}")
 
     var_list = []
+    # initialze a gradient list in FL
+    gradients_list = []
 
     def train_step(x, y):
         with tf.GradientTape() as tape:
@@ -511,6 +528,7 @@ def elastic_training(
 
     total_time_0 = 0
     total_time_1 = 0
+    print("============starting training")
     for epoch in range(epochs):
 
         t0 = time.time()
@@ -520,8 +538,9 @@ def elastic_training(
                 I = -I.numpy()
                 I = np.flip(I)
                 # np.savetxt('importance.out', I)
-                rho_b = rho_for_backward_pass(rho)
+                print("======rho_b ccccc")
                 max_importance, m = selection_DP(t_dy_q, t_dw_q, I, rho=rho_b * disco)
+                print("=======max_importance calculated")
                 m = np.flip(m)
                 print("m:", m)
                 print("max importance:", max_importance)
@@ -532,11 +551,10 @@ def elastic_training(
                     if tf.equal(m_k, 1):
                         var_list.append(all_vars[k])
                 train_step_cpl = tf.function(train_step)
-
+        print("======selection completed")
         for x, y in tqdm(ds_train, desc=f'epoch {epoch + 1}/{epochs}', ascii=True):
 
             training_step += 1
-
             train_step_cpl(x, y)
 
             if training_step % 200 == 0:
@@ -578,8 +596,6 @@ def elastic_training(
         print("per epoch time(s) including validation:", t2 - t0)
         total_time_1 += (t2 - t0)
 
-    # print("total time excluding validation (s):", total_time_0)
-    # print("total time including validation (s):", total_time_1)
     best_validation_acc = best_validation_acc.numpy() * 100
     total_time_0 /= 3600
     print('===============================================')
@@ -589,8 +605,8 @@ def elastic_training(
     print('===============================================')
     if save_txt:
         np.savetxt(logdir + '/' + runid + '.txt', np.array([total_time_0, best_validation_acc]))
-    # sig_stop_handler(None, None)
 
+    return model
 
 def elastic_training_weight_magnitude(
         model,

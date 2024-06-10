@@ -264,7 +264,7 @@ def port_datasets(
 
     elif dataset_name == 'mnist-dirichlet':
         # 设置 Dirichlet 分布的参数
-        alpha = 0.3  # 控制 non-iid 程度，alpha 越小，non-iid 程度越高
+        alpha = 0.2  # 控制 non-iid 程度，alpha 越小，non-iid 程度越高
 
         # 加载完整的 MNIST 训练集
         ds_train = tfds.load('mnist', split='train', as_supervised=True)
